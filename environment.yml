@@ -1,0 +1,13 @@
+name: ece143-group8 #Environment name
+dependencies:
+  - graphviz=2.40.1
+  - python=3.7
+  - pygraphviz
+  - pip:
+    - dash
+    - dash-renderer
+    - dash-core-components
+    - dash-html-components
+    - plotly
+    - gunicorn
+    - networkx
