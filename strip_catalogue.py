@@ -60,7 +60,7 @@ def get_courses_for_major(major):
 
     # write results to file
     try:
-        f_write = open("./raw_course_data/" + major + ".txt", "w+")
+        f_write = open("./raw_course_data/" + major + ".txt", "w+", encoding="utf-8")
         f_write.write(str(course_map))
         f_write.close()
     except:
@@ -267,7 +267,7 @@ def get_quarter_offerings(major, quarter):
 
     # write to file, appending course num to major
     try:
-        f_write = open('./quarter_data/' + major + "_" + quarter + '.txt', 'w+')
+        f_write = open('./quarter_data/' + major + "_" + quarter + '.txt', 'w+', encoding='utf-8')
         f_write.writelines(str(course)+"\n" for course in unique_list)
         f_write.close()
     except:
@@ -334,7 +334,7 @@ def get_raw_course_list(major):
 
     # if already searched, pull from file
     if os.path.exists("./raw_course_data/" + major + ".txt"):
-        f_read = open("./raw_course_data/" + major + ".txt", "r")
+        f_read = open("./raw_course_data/" + major + ".txt", "r", encoding="utf-8")
         course_dict = f_read.read()
         f_read.close()
 
@@ -367,7 +367,7 @@ def get_quarter_list(major, quarter):
 
     # if already searched, pull from file
     if os.path.exists("./quarter_data/" + major + "_" + quarter + ".txt"):
-        f_read = open("./quarter_data/" + major + "_" + quarter + ".txt", "r")
+        f_read = open("./quarter_data/" + major + "_" + quarter + ".txt", "r", encoding="utf-8")
         course_list = f_read.read().splitlines()
         f_read.close()
 
