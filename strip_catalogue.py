@@ -2,6 +2,8 @@ import requests
 import re
 import os
 import time
+import random
+import scrapercleaner
 from bs4 import BeautifulSoup
 
 def get_courses_for_major(major):
@@ -31,17 +33,19 @@ def get_courses_for_major(major):
         if course_name != '':
 
             # try to identify description
-            description = find_ending_helper(split_text, 'class=\"course-descriptions\">', '.*', '</p>', i + 1 + offset)
-
+            description, dummy = find_ending_helper(split_text, 'class=\"course-descriptions\">', '.*', '</p>', i + 1 + offset)
             # remove the prereq string from the description (since its added from a different source later)
             prereq_len = 0
-            prereq_strip = re.search('<.*', description[0])
+            prereq_strip = re.search('<.*', description)
+
             if prereq_strip != None:
                 prereq_len = len(prereq_strip.group())
 
-            # if no prereq string, keep as is
+            # if no prereq string, keep as is, otherwise trim
             if prereq_len != 0:
-                course_names[course_name] = description[0][:-prereq_len]
+                course_names[course_name] = description[:-prereq_len]
+            else:
+                course_names[course_name] = description
 
     # find the prereqs for every course
     course_map = {}
@@ -298,7 +302,6 @@ def get_quarter_helper(webpage):
 
 
 
-
 """
 
 ======================================
@@ -309,7 +312,8 @@ ONLY CALL FUNCTIONS BELOW THIS COMMENT
 
 """
 
-
+def get_clean_course_prereq(major):
+    return scrapercleaner.clean_scrape(get_raw_course_list(major))
 
 def get_raw_course_list(major):
     '''
@@ -337,6 +341,7 @@ def get_raw_course_list(major):
         return eval(course_dict)
     else:
         return get_courses_for_major(major)
+
 
 def get_quarter_list(major, quarter):
     '''
@@ -371,16 +376,15 @@ def get_quarter_list(major, quarter):
         return get_quarter_offerings(major, quarter)
 
 def develop_plan(course_list, max_num, start_qtr):
-    # get prereqs for each course
-    # get quarter offerings for each course
 
     major_list = set()
     for course in course_list:
-        major_list.add(re.search('\w+ ', course).group()[:-1])
+        major_list.add(re.search('[a-zA-Z]+', course).group())
 
     fa_list = []
     wi_list = []
     sp_list = []
+    prereq_map = {}
     for major in major_list:
         fa_major_list = get_quarter_list(major, 'FA19')
         fa_list.extend([major + ' ' + course for course in fa_major_list])
@@ -391,6 +395,9 @@ def develop_plan(course_list, max_num, start_qtr):
         sp_major_list = get_quarter_list(major, 'SP19')
         sp_list.extend([major + ' ' + course for course in sp_major_list])
 
+        prereq_list = get_clean_course_prereq(major)
+        prereq_map.update({major + ' ' + val[0]:val[1] or [] for val in prereq_list})
+
     fa_courses = [course for course in course_list if course in fa_list]
     wi_courses = [course for course in course_list if course in wi_list]
     sp_courses = [course for course in course_list if course in sp_list]
@@ -400,22 +407,67 @@ def develop_plan(course_list, max_num, start_qtr):
     course_quarter_list.append(wi_courses)
     course_quarter_list.append(sp_courses)
 
-    prereq = {
-        'ECE 264A': [],
-        'MAE 8': ['MATH 20A', 'MATH 20B']
-    }
-
     final_plan = []
     cur_quarter = start_qtr
-    needed_courses = set(course_list.copy())
+    needed_courses = set([course for course in course_list if course in prereq_map.keys()])
+
     while len(needed_courses) != 0:
-        needed_quarter_courses = [course for course in course_quarter_list[cur_quarter] if course in needed_courses]
-        eligible_courses = [course for course in eligible_courses if set(prereq[course]).difference(needed_courses)]
-        final_plan.append(tuple(eligible_courses))
+        offered_quarter_courses = [course for course in course_quarter_list[cur_quarter % 3] if course in needed_courses]
+
+        eligible_courses = [course for course in offered_quarter_courses \
+                            if not set([sublist[random.randrange(len(sublist))] for sublist in prereq_map[course]]).intersection(needed_courses)]
+
+        if len(eligible_courses) > max_num:
+            eligible_courses = eligible_courses[:max_num]
+
+        final_plan.append(eligible_courses.copy())
         needed_courses.difference_update(eligible_courses)
         cur_quarter += 1
 
     return final_plan
 
-print(develop_plan(['ECE 264A', 'MAE 8'], 3, 1))
+def develop_plan_recursion(course_list, max_num, start_qtr):
+    all_courses = set(course_list)
+    last_courses = set()
+
+    cur_prereq_map_simple = develop_plan_recursion_helper(course_list)
+    while not last_courses == all_courses:
+        last_courses = all_courses.copy()
+
+        for course in last_courses:
+            if course in cur_prereq_map_simple:
+                all_courses.update(cur_prereq_map_simple[course])
+        cur_prereq_map_simple = develop_plan_recursion_helper(all_courses)
+
+    return develop_plan(all_courses, max_num, start_qtr)
+
+def develop_plan_recursion_helper(course_list):
+    '''
+    Returns the prereq mapping for all majors given in course_list
+
+    :param course_list:
+    :return:
+    '''
+    major_list = set()
+    for course in course_list:
+        major_list.add(re.search('[a-zA-Z]+', course).group())
+
+    prereq_map_init = {}
+    for major in major_list:
+        prereq_list = get_clean_course_prereq(major)
+        prereq_map_init.update({major + ' ' + val[0]: val[1] or [] for val in prereq_list})
+
+    return {course: [sublist[random.randrange(len(sublist))] for sublist in prereq_map_init[course]] \
+            for course in prereq_map_init}
+
+def iterate_plan_recursions(course_list, max_num, start_qtr, num_iterations):
+    return min([develop_plan_recursion(course_list, max_num, start_qtr) for i in range(num_iterations)], key=len)
+
+# FIX 0 problem
+# print(get_raw_course_list('MATH'))
+# print(develop_plan(['ECE 264A', 'ECE 35'], 3, 1))
+# print(get_clean_course_prereq('MATH'))
+# print(list([1, 2]))
+print(iterate_plan_recursions(['MATH 144'], 3, 1, 1))
+# print(min([[], [1, 2], [1]], key=len))
 
