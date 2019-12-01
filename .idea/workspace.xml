@@ -2,8 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="1afe4165-8e95-4e9e-aa49-da309048499c" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scrapercleaner.py" beforeDir="false" afterPath="$PROJECT_DIR$/scrapercleaner.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/strip_catalogue.py" beforeDir="false" afterPath="$PROJECT_DIR$/strip_catalogue.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -18,13 +16,18 @@
       <file leaf-file-name="strip_catalogue.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/strip_catalogue.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="658">
-              <caret line="470" column="40" selection-start-line="470" selection-start-column="40" selection-end-line="470" selection-end-column="40" />
+            <state relative-caret-position="335">
+              <caret line="451" column="5" selection-start-line="451" selection-start-column="5" selection-end-line="451" selection-end-column="5" />
               <folding>
                 <element signature="e#0#15#0" expanded="true" />
               </folding>
             </state>
           </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="ECE_WI19.txt" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/quarter_data/ECE_WI19.txt">
+          <provider selected="true" editor-type-id="text-editor" />
         </entry>
       </file>
       <file leaf-file-name="scrapercleaner.py" pinned="false" current-in-tab="false">
@@ -44,8 +47,10 @@
       <find>35</find>
       <find>clean_scra</find>
       <find>pin</find>
-      <find>print</find>
       <find>144</find>
+      <find>27</find>
+      <find>275</find>
+      <find>print</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -80,6 +85,11 @@
               <item name="ucsd-course-network" type="b2602c69:ProjectViewProjectNode" />
               <item name="ucsd-course-network" type="462c0819:PsiDirectoryNode" />
               <item name="quarter_data" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="ucsd-course-network" type="b2602c69:ProjectViewProjectNode" />
+              <item name="ucsd-course-network" type="462c0819:PsiDirectoryNode" />
+              <item name="raw_course_data" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="ucsd-course-network" type="b2602c69:ProjectViewProjectNode" />
@@ -172,20 +182,10 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/quarter_data/ECE_FA19.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="153">
-          <caret line="9" column="3" lean-forward="true" selection-start-line="9" selection-start-column="3" selection-end-line="9" selection-end-column="3" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/raw_course_data/M.txt">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
     <entry file="file://$PROJECT_DIR$/raw_course_data/P.txt">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/raw_course_data/MAE.txt">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
     <entry file="file://$PROJECT_DIR$/raw_course_data/ECE.txt">
@@ -202,10 +202,36 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/raw_course_data/MAE.txt">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/raw_course_data/CSE.txt">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/quarter_data/CSE_FA19.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="17">
+          <caret line="1" column="2" selection-start-line="1" selection-end-line="1" selection-end-column="2" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/quarter_data/ECE_SP19.txt">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/quarter_data/ECE_WI19.txt">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/quarter_data/ECE_FA19.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="193">
+          <caret line="49" column="3" selection-start-line="49" selection-end-line="49" selection-end-column="3" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/strip_catalogue.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="658">
-          <caret line="470" column="40" selection-start-line="470" selection-start-column="40" selection-end-line="470" selection-end-column="40" />
+        <state relative-caret-position="335">
+          <caret line="451" column="5" selection-start-line="451" selection-start-column="5" selection-end-line="451" selection-end-column="5" />
           <folding>
             <element signature="e#0#15#0" expanded="true" />
           </folding>
