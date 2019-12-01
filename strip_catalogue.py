@@ -219,61 +219,68 @@ def get_quarter_offerings(major, quarter):
     assert type(quarter) is str, 'quarter error: type must be string'
     assert quarter != '', 'quarter error: cannot be empty string'
 
-    # url for retrieving the class quarter schedule
-    test_url = 'https://act.ucsd.edu/scheduleOfClasses/scheduleOfClassesStudentResult.htm'
-
-    # headers for html post
-    data = {
-        'selectedTerm': quarter,
-        'loggedIn': 'false',
-        'selectedSubjects': major,
-        '_selectedSubjects': 1,
-        'schedOption1': True,
-        'schedOption11': True,
-        'schedOption12': True,
-        'schedOption2': True,
-        'schedOption4': True,
-        'schedOption5': True,
-        'schedOption3': True,
-        'schedOption7': True,
-        'schedOption8': True,
-        'schedOption13': True,
-        'schedOption10': True,
-        'schedOption9': True,
-    }
-
-    # start the html session and post to url
-    s = requests.Session()
-    first_page = s.post(test_url, data).text
-
-    # get the first list of courses
-    course_list = get_quarter_helper(first_page)
-
-    # iterate over remaining pages
-    i = 2
-    cur_page = s.get('https://act.ucsd.edu/scheduleOfClasses/scheduleOfClassesStudentResult.htm?page=' + str(i)).text
-    while re.search('<title>Apache Tomcat/8.0.33 - Error report</title>', ''.join(cur_page)) == None:
-
-        # extend the current course list
-        course_list.extend(get_quarter_helper(cur_page))
-        i += 1
-
-        # get the html of the next page
-        cur_page = s.get(
-            'https://act.ucsd.edu/scheduleOfClasses/scheduleOfClassesStudentResult.htm?page=' + str(i)).text
-
-    # unique the course list
-    unique_list = list(set(course_list))
-
-    # write to file, appending course num to major
     try:
-        f_write = open('./quarter_data/' + major + "_" + quarter + '.txt', 'w+', encoding='utf-8')
-        f_write.writelines(str(course)+"\n" for course in unique_list)
-        f_write.close()
+        unique_list = []
+        with open('./quarter_data/' + major + "_" + quarter + '.txt', 'r', encoding='utf-8') as f:
+            for line in f:
+                unique_list.append(line.strip())
+        return unique_list
     except:
-        print('unable to write course info to directory')
+        # url for retrieving the class quarter schedule
+        test_url = 'https://act.ucsd.edu/scheduleOfClasses/scheduleOfClassesStudentResult.htm'
 
-    return unique_list
+        # headers for html post
+        data = {
+            'selectedTerm': quarter,
+            'loggedIn': 'false',
+            'selectedSubjects': major,
+            '_selectedSubjects': 1,
+            'schedOption1': True,
+            'schedOption11': True,
+            'schedOption12': True,
+            'schedOption2': True,
+            'schedOption4': True,
+            'schedOption5': True,
+            'schedOption3': True,
+            'schedOption7': True,
+            'schedOption8': True,
+            'schedOption13': True,
+            'schedOption10': True,
+            'schedOption9': True,
+        }
+
+        # start the html session and post to url
+        s = requests.Session()
+        first_page = s.post(test_url, data).text
+
+        # get the first list of courses
+        course_list = get_quarter_helper(first_page)
+
+        # iterate over remaining pages
+        i = 2
+        cur_page = s.get('https://act.ucsd.edu/scheduleOfClasses/scheduleOfClassesStudentResult.htm?page=' + str(i)).text
+        while re.search('<title>Apache Tomcat/8.0.33 - Error report</title>', ''.join(cur_page)) == None:
+
+            # extend the current course list
+            course_list.extend(get_quarter_helper(cur_page))
+            i += 1
+
+            # get the html of the next page
+            cur_page = s.get(
+                'https://act.ucsd.edu/scheduleOfClasses/scheduleOfClassesStudentResult.htm?page=' + str(i)).text
+
+        # unique the course list
+        unique_list = list(set(course_list))
+
+        # write to file, appending course num to major
+        try:
+            f_write = open('./quarter_data/' + major + "_" + quarter + '.txt', 'w+', encoding='utf-8')
+            f_write.writelines(str(course)+"\n" for course in unique_list)
+            f_write.close()
+        except:
+            print('unable to write course info to directory')
+
+        return unique_list
 
 def get_quarter_helper(webpage):
     '''
