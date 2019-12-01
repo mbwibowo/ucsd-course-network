@@ -110,7 +110,6 @@ server = app.server
 app.layout = html.Div([
         html.H1('Loading...', id='title'),
         dcc.Graph(id='graph',config={'displayModeBar': False}),
-        html.Div(id='dept-state', style={'display': 'none'}),
         html.Div(className='row', children = [
             html.Div([
                 dcc.Markdown('### Choose a department: '),
@@ -132,7 +131,6 @@ desc_tmpl = """
 {}
 """
 
-# TODO cache all of this so we don't have to rebuild it every single time
 def switch_dept(dept):
     ece_raw = get_raw_course_list(dept)
     ece = clean_scrape(ece_raw)
@@ -141,6 +139,7 @@ def switch_dept(dept):
     for k, v in ece_raw.items():
         # split into course code, course title, and number of units (unused)
         k_split = k.replace("(", ".").split(".")
+        print(k, v)
         ece_desc[k_split[0]] = [k_split[1].strip(), v[0]]
 
     ece_offered = get_quarter_offerings(dept, "FA19") + get_quarter_offerings(dept, "WI20") + get_quarter_offerings(dept, "SP20")

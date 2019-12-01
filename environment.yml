@@ -11,3 +11,4 @@ dependencies:
     - plotly
     - gunicorn
     - networkx
+    - beautifulsoup4
