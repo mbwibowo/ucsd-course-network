@@ -7,37 +7,33 @@ from networkx.drawing.nx_agraph import graphviz_layout
 import plotly.graph_objs as go
 
 from util import format_code, sort_codes
-
-# handmade 'dataset', listing courses (nodes) and edges (prereqs)
-ece_courses = [5, 15, 16, 17, 25, 30, 35, 45, 65, 100, 101, 102, 103, 107, 109, 111, 115, 120, '121A', 123, 124, '125A', '125B', '128C',
-              134, '135A', '135B', '136L', '138L', '140A', '140B', '141A', '141B', 143, 144, '145L', 148, 150, 153, '154A', 155, 156,
-               '157A', '157B', '158A', '158B', 159, '161A','161B','161C',163,164,165,166,'171A','171B','172A',174,'175A','175B',180,181,
-              182,183,184,185,187]
-ece_prereqs = [(16, 15), (30, 15), (30, 25), (45, 35), (65, 35), (100, 45), (100, 65), (101, 45), (102, 65), (102, 100), (103, 65),
-               (107, 45), (111, 25), (115, 16), ('121A', 35), ('121B', '121A'), (123, 107), (124, '121B'), (124, '125A'), ('125A', '121A'),
-               ('125B', '125A'), ('128B', 35), ('128B', '128A'), ('128C', '128B'), ('135A',103),('135B','135A'),('136L','135B'),
-               ('140A',15),('140B', '140A'),('141A',30),('141B','141A'),(143,16),(144,15),('145L',107),(148, 15),(153,109),('154A',101),
-               ('154A',153),(155,101),(155,109),(155,153),('157A',109),('157A','161A'),('157B','154A'),('158A',109),('158B','158A'),
-               (159,153),('161A',101),('161B','161A'),('161C','161A'),(163,101),(163,102),(164,102),(165,102),(166,102),(166,107),
-               ('171A',45),('171B','171A'),('172A',101),(174,15),(174,109),('175A',109),('175A',174),('175B','175A'),(181,103),(181,107),
-               (182,103),(182,107),(183,103),(183,107),(184,182),(185,183),(187,101)]
-# flip the order to show direction
-ece_prereqs = [(j,i) for i,j in ece_prereqs]
+from strip_catalogue import get_raw_course_list, get_quarter_offerings
+from scrapercleaner import clean_scrape
 
 def generate_graph(nodes, edges):
     """
-    Generates a networkx directed graph based on lists of nodes and edges.
+    Generates a networkx directed graph based on lists of nodes and weighted edges (see networkx.DiGraph.add_weighted_edges_from()).
     :param nodes: nodes in graph
     :type nodes: list
-    :param prereqs: edges in graph
+    :param prereqs: weighted edges in graph
     :type prereqs: list
     :return: networkx.DiGraph
     """
     assert isinstance(nodes, list)
     assert isinstance(edges, list)
     G = nx.DiGraph()
-    G.add_nodes_from(nodes)
-    G.add_edges_from(edges)
+    #G.add_nodes_from(nodes)
+    G.add_weighted_edges_from(edges)
+
+    # prune edges which are redundant (i.e. remove the shorter paths since longer ones exist already)
+    for n in G.nodes():
+        ancestors = nx.algorithms.dag.ancestors(G, n)
+        for i in ancestors:
+            paths = list(nx.all_simple_paths(G, i, n))
+            if len(paths) > 1:
+                for p in paths:
+                    if len(p) == 2:
+                        G.remove_edge(p[0], p[1])
     return G
 
 def generate_figure(G):
@@ -102,16 +98,6 @@ def generate_figure(G):
                     yaxis=dict(showgrid=False, zeroline=False, showticklabels=False,fixedrange=True))
            )
 
-# create a directed graph, since prereqs have a 'direction' (requirements -> course)
-G = generate_graph(ece_courses, ece_prereqs)
-
-# remove non-connected nodes for better rendering
-G.remove_nodes_from(list(nx.isolates(G)))
-
-#print(nx.algorithms.dag.dag_longest_path(G))
-
-fig = generate_figure(G)
-
 # external css for 'n columns' class and other various helpers
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -119,13 +105,13 @@ server = app.server
 
 # page layout: title, graph, options, description
 app.layout = html.Div([
-        html.H1('ECE Undergraduate Courses'),
+        html.H1('Loading...', id='title'),
         dcc.Graph(id='graph',config={'displayModeBar': False}),
+        html.Div(id='dept-state', style={'display': 'none'}),
         html.Div(className='row', children = [
             html.Div([
-                dcc.Markdown('### Options: '),
-                dcc.Dropdown(options=[{'label': 'ECE', 'value': 'ECE'}],placeholder='Choose a department'),
-                dcc.Checklist(options=[{'label': 'Hide other departments', 'value': 'T'}])
+                dcc.Markdown('### Choose a department: '),
+                dcc.Dropdown(id='dept-select', options=[{'label': 'ECE', 'value': 'ECE'}, {'label': 'CSE', 'value': 'CSE'}],placeholder='Choose a department', value='ECE', clearable=False),
                 # TODO: use pattern to limit
                 #dcc.Input(id='code',placeholder='Course code (e.g. 123A)',debounce=True)
             ], className='three columns'),
@@ -135,7 +121,7 @@ app.layout = html.Div([
 
 # markdown template for course description
 desc_tmpl = """
-### Course: {}
+### {}: {}
 
 #### Full Prerequisites: {}
 
@@ -143,11 +129,55 @@ desc_tmpl = """
 {}
 """
 
+# TODO cache all of this so we don't have to rebuild it every single time
+def switch_dept(dept):
+    ece_raw = get_raw_course_list(dept)
+    ece = clean_scrape(ece_raw)
+    # TODO use dict comprehension?
+    ece_desc = dict()
+    for k, v in ece_raw.items():
+        # split into course code, course title, and number of units (unused)
+        k_split = k.replace("(", ".").split(".")
+        ece_desc[k_split[0]] = [k_split[1].strip(), v[0]]
+
+    ece_offered = get_quarter_offerings(dept, "FA19") + get_quarter_offerings(dept, "WI20") + get_quarter_offerings(dept, "SP20")
+    # remove the "ECE" tags and draw each department as a single node
+    # use weighted edges to show interchangeable prereqs
+    ece_courses = []
+    ece_prereqs = []
+    for course in ece:
+        k, v = course
+        # remove grad classes and courses not offered this year
+        if len(k) >= 3 and k[0] == '2' or k not in ece_offered:
+            continue
+        if v:
+            for i in v:
+                weight = len(i)
+                for j in i:
+                    if j.startswith(dept):
+                        # check if the course actually exists in catalog and still offered this year
+                        if j in ece_desc and j[4:] in ece_offered:
+                            ece_prereqs.append([j[4:], k, 1/weight])
+                    # if from another department, just draw as a single node
+                    else:
+                        pass
+                        #ece_prereqs.append([j.split()[0], k, 1/weight])
+        # if no prereqs, add as independent node
+        else:
+            ece_courses.append(k)
+
+    G = generate_graph(ece_courses, ece_prereqs)
+
+    #print(nx.algorithms.dag.dag_longest_path(G))
+    #G.remove_nodes_from(list(nx.isolates(G)))
+    fig = generate_figure(G)
+    return G, ece_desc, fig
+
 
 # TODO fix mobile support for touch/click?
-@app.callback([Output('graph', 'figure'),Output('desc', 'children')],[Input('graph', 'hoverData'),Input('graph','selectedData')])
+@app.callback([Output('title', 'children'),Output('graph', 'figure'),Output('desc', 'children')],[Input('dept-select', 'value'), Input('graph', 'hoverData'),Input('graph','selectedData')])
         #Input('code','value')])
-def highlight_prereqs(hoverData,selectedData):
+def highlight_prereqs(dept,hoverData,selectedData):
     """
     Callback for click and hover events from Dash.
     Using the event node, it selects a course and its prereqs, and lowers the opacity of unrelated courses (and lines).
@@ -159,51 +189,50 @@ def highlight_prereqs(hoverData,selectedData):
     :type selectedData: dict or None
     :return: plotly.graph_objs.Figure
     """
+    G, ece_desc, fig = switch_dept(dept)
+    title = "{} Undergraduate Courses".format(dept)
     prereqs = []
     desc = ""
     point = None
 
-#    if code and not hoverData and not selectedData:
-#        try:
-#            point = format_code(code)
-#        except ValueError:
-#            point = None
+    # if there's an error here, that means the selected node is from the old plot, so we don't need to highlight anything
+    try:
+        # extract the point id from event data
+        if hoverData:
+            point = hoverData['points'][0]['customdata']
+        elif selectedData:
+            point = selectedData['points'][0]['customdata']
 
-    # extract the point id from event data
-    if hoverData:
-        #print('hover: ' + str(hoverData))
-        point = hoverData['points'][0]['customdata']
-    elif selectedData:
-        #print('select: ' + str(selectedData))
-        point = selectedData['points'][0]['customdata']
+        # obtain full list of prereqs from graph, and fill the description template
+        if point:
+            desc_list = ece_desc[dept + " " + str(point)]
+            prereqs = sort_codes(list(nx.algorithms.dag.ancestors(G, point)))
+            if not prereqs:
+                prereqs_str = 'None'
+            else:
+                prereqs_str = ', '.join([dept + " " + str(i) for i in prereqs])
+            desc = desc_tmpl.format(dept + " " + str(point), desc_list[0], prereqs_str, desc_list[1])
 
-    # obtain full list of prereqs from graph, and fill the description template
-    if point:
-        prereqs = sort_codes(list(nx.algorithms.dag.ancestors(G, point)))
-        if not prereqs:
-            prereqs_str = 'None'
-        else:
-            prereqs_str = ', '.join(['ECE ' + str(i) for i in prereqs])
-        desc = desc_tmpl.format('ECE ' + str(point), prereqs_str, '')
+        # obtain node indices for dash to select
+        prereqs.append(point)
+        prereq_index = [i for i, e in enumerate(G.nodes()) if e in prereqs]
 
-    # obtain node indices for dash to select
-    prereqs.append(point)
-    prereq_index = [i for i, e in enumerate(G.nodes()) if e in prereqs]
+        # highlight all of the nodes if none are selected
+        if not prereq_index:
+            prereq_index = list(range(len(G.nodes())))
 
-    # highlight all of the nodes if none are selected
-    if not prereq_index:
-        prereq_index = list(range(len(G.nodes())))
+        fig['data'][0]['selectedpoints'] = prereq_index
 
-    fig['data'][0]['selectedpoints'] = prereq_index
+        # change the opacity for edges which are on the prerequisite tree for selected course
+        for i,(j,k) in enumerate(G.edges()):
+            if j in prereqs and k in prereqs:
+                fig['layout']['shapes'][i]['line']['color'] = 'rgb(127,127,127)'
+            else:
+                fig['layout']['shapes'][i]['line']['color'] = 'rgba(127,127,127,0.5)'
+    except:
+        pass
 
-    # change the opacity for edges which are on the prerequisite tree for selected course
-    for i,(j,k) in enumerate(G.edges()):
-        if j in prereqs and k in prereqs:
-            fig['layout']['shapes'][i]['line']['color'] = 'rgb(127,127,127)'
-        else:
-            fig['layout']['shapes'][i]['line']['color'] = 'rgba(127,127,127,0.5)'
-
-    return fig, desc
+    return title, fig, desc
 
 if __name__ == '__main__':
     app.run_server(debug=True)
