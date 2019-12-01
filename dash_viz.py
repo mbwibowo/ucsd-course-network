@@ -24,16 +24,6 @@ def generate_graph(nodes, edges):
     G = nx.DiGraph()
     #G.add_nodes_from(nodes)
     G.add_weighted_edges_from(edges)
-
-    # prune edges which are redundant (i.e. remove the shorter paths since longer ones exist already)
-    for n in G.nodes():
-        ancestors = nx.algorithms.dag.ancestors(G, n)
-        for i in ancestors:
-            paths = list(nx.all_simple_paths(G, i, n))
-            if len(paths) > 1:
-                for p in paths:
-                    if len(p) == 2:
-                        G.remove_edge(p[0], p[1])
     return G
 
 def generate_figure(G):
@@ -139,7 +129,6 @@ def switch_dept(dept):
     for k, v in ece_raw.items():
         # split into course code, course title, and number of units (unused)
         k_split = k.replace("(", ".").split(".")
-        print(k, v)
         ece_desc[k_split[0]] = [k_split[1].strip(), v[0]]
 
     ece_offered = get_quarter_offerings(dept, "FA19") + get_quarter_offerings(dept, "WI20") + get_quarter_offerings(dept, "SP20")
@@ -169,6 +158,39 @@ def switch_dept(dept):
             ece_courses.append(k)
 
     G = generate_graph(ece_courses, ece_prereqs)
+
+    for cycle in nx.cycle_basis(G.to_undirected()):
+        # if there is a distinct head and tail, and head is connected directly to tail
+        head = None
+        tail = None
+        #print(cycle)
+        for i in cycle:
+            others = cycle.copy()
+            others.remove(i)
+            ancestors = nx.algorithms.dag.ancestors(G, i)
+            descendants = nx.algorithms.dag.descendants(G, i)
+            if all(o in ancestors for o in others):
+                head = i
+            elif all(o in descendants for o in others):
+                tail = i
+        if G.has_edge(tail, head):
+            print("has edge from {} to {}".format(tail,head))
+            other_adj = [adj for adj in cycle if adj in G.predecessors(head) and adj != tail]
+            print("other adj: {}".format(other_adj))
+            # check if it's an OR or an AND (don't remove if it's an OR)
+            false_pos = False
+            for (k, v) in ece:
+                if k == head:
+                   for reqs in v:
+                       if other_adj[0] in reqs and tail in reqs:
+                           false_pos = True
+                           print("found req: {}".format(reqs))
+                           break
+                   break
+
+            if not false_pos:
+                print("removing edge from {} to {}".format(tail,head))
+                G.remove_edge(tail,head)
 
     #print(nx.algorithms.dag.dag_longest_path(G))
     #G.remove_nodes_from(list(nx.isolates(G)))
