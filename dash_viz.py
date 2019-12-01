@@ -50,10 +50,10 @@ def generate_figure(G):
 
     # extract the edge endpoint coordinates (from graphviz_layout) to use for drawing in dash
     edges = []
-    for edge in G.edges():
+    for edge in G.edges.data('weight'):
         x0, y0 = pos[edge[0]]
         x1, y1 = pos[edge[1]]
-        edges.append((x0,y0,x1,y1))
+        edges.append((x0,y0,x1,y1, edge[2]))
 
     # create lines from the previously generated edges
     # TODO add arrow drawing somehow?
@@ -64,7 +64,7 @@ def generate_figure(G):
         x1 = i[2],
         y1 = i[3],
         layer = 'below',
-        line = dict(color='rgba(127,127,127,0.5)',width=2)
+        line = dict(color='rgba(127,127,127,{})'.format(i[4]),width=2)
         ) for i in edges]
 
     # extract the node coordinates
@@ -98,6 +98,9 @@ def generate_figure(G):
                     yaxis=dict(showgrid=False, zeroline=False, showticklabels=False,fixedrange=True))
            )
 
+depts = ['ECE', 'CSE', 'MAE', 'MATH', 'PHYS']
+dropdown = [{'label': i, 'value': i} for i in depts]
+
 # external css for 'n columns' class and other various helpers
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -111,7 +114,7 @@ app.layout = html.Div([
         html.Div(className='row', children = [
             html.Div([
                 dcc.Markdown('### Choose a department: '),
-                dcc.Dropdown(id='dept-select', options=[{'label': 'ECE', 'value': 'ECE'}, {'label': 'CSE', 'value': 'CSE'}],placeholder='Choose a department', value='ECE', clearable=False),
+                dcc.Dropdown(id='dept-select', options=dropdown, value='ECE', clearable=False),
                 # TODO: use pattern to limit
                 #dcc.Input(id='code',placeholder='Course code (e.g. 123A)',debounce=True)
             ], className='three columns'),
@@ -156,8 +159,8 @@ def switch_dept(dept):
                 for j in i:
                     if j.startswith(dept):
                         # check if the course actually exists in catalog and still offered this year
-                        if j in ece_desc and j[4:] in ece_offered:
-                            ece_prereqs.append([j[4:], k, 1/weight])
+                        if j in ece_desc and j.split()[1] in ece_offered:
+                            ece_prereqs.append([j.split()[1], k, 1/weight])
                     # if from another department, just draw as a single node
                     else:
                         pass
@@ -172,6 +175,11 @@ def switch_dept(dept):
     #G.remove_nodes_from(list(nx.isolates(G)))
     fig = generate_figure(G)
     return G, ece_desc, fig
+
+dept_cache = dict()
+for i in depts:
+    print("caching {}".format(i))
+    dept_cache[i] = switch_dept(i)
 
 
 # TODO fix mobile support for touch/click?
@@ -189,7 +197,7 @@ def highlight_prereqs(dept,hoverData,selectedData):
     :type selectedData: dict or None
     :return: plotly.graph_objs.Figure
     """
-    G, ece_desc, fig = switch_dept(dept)
+    G, ece_desc, fig = dept_cache[dept]
     title = "{} Undergraduate Courses".format(dept)
     prereqs = []
     desc = ""
@@ -224,11 +232,11 @@ def highlight_prereqs(dept,hoverData,selectedData):
         fig['data'][0]['selectedpoints'] = prereq_index
 
         # change the opacity for edges which are on the prerequisite tree for selected course
-        for i,(j,k) in enumerate(G.edges()):
+        for i,(j,k,w) in enumerate(G.edges.data('weight')):
             if j in prereqs and k in prereqs:
-                fig['layout']['shapes'][i]['line']['color'] = 'rgb(127,127,127)'
+                fig['layout']['shapes'][i]['line']['color'] = 'rgba(127,127,127,{})'.format(w)
             else:
-                fig['layout']['shapes'][i]['line']['color'] = 'rgba(127,127,127,0.5)'
+                fig['layout']['shapes'][i]['line']['color'] = 'rgba(127,127,127,{})'.format(w*0.5)
     except:
         pass
 
