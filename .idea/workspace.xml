@@ -2,6 +2,34 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="1afe4165-8e95-4e9e-aa49-da309048499c" name="Default" comment="">
+      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/quarter_data/CSE_SP20.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/quarter_data/CSE_WI20.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/quarter_data/MAE_SP20.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/quarter_data/MAE_WI20.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/quarter_data/MATH_SP20.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/quarter_data/MATH_WI20.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/quarter_data/PHYS_SP20.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/quarter_data/PHYS_WI20.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/ucsd-course-network.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dash_viz.py" beforeDir="false" afterPath="$PROJECT_DIR$/dash_viz.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/environment.yml" beforeDir="false" afterPath="$PROJECT_DIR$/environment.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/quarter_data/CSE_FA19.txt" beforeDir="false" afterPath="$PROJECT_DIR$/quarter_data/CSE_FA19.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/quarter_data/CSE_SP19.txt" beforeDir="false" afterPath="$PROJECT_DIR$/quarter_data/CSE_SP19.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/quarter_data/CSE_WI19.txt" beforeDir="false" afterPath="$PROJECT_DIR$/quarter_data/CSE_WI19.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/quarter_data/ECE_FA19.txt" beforeDir="false" afterPath="$PROJECT_DIR$/quarter_data/ECE_FA19.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/quarter_data/ECE_SP19.txt" beforeDir="false" afterPath="$PROJECT_DIR$/quarter_data/ECE_SP20.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/quarter_data/ECE_WI19.txt" beforeDir="false" afterPath="$PROJECT_DIR$/quarter_data/ECE_WI20.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/raw_course_data/CSE.txt" beforeDir="false" afterPath="$PROJECT_DIR$/raw_course_data/CSE.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/raw_course_data/ECE.txt" beforeDir="false" afterPath="$PROJECT_DIR$/raw_course_data/ECE.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/raw_course_data/MAE.txt" beforeDir="false" afterPath="$PROJECT_DIR$/raw_course_data/MAE.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/raw_course_data/MATH.txt" beforeDir="false" afterPath="$PROJECT_DIR$/raw_course_data/MATH.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/raw_course_data/PHYS.txt" beforeDir="false" afterPath="$PROJECT_DIR$/raw_course_data/PHYS.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/strip_catalogue.py" beforeDir="false" afterPath="$PROJECT_DIR$/strip_catalogue.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -16,18 +44,13 @@
       <file leaf-file-name="strip_catalogue.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/strip_catalogue.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="335">
-              <caret line="451" column="5" selection-start-line="451" selection-start-column="5" selection-end-line="451" selection-end-column="5" />
+            <state relative-caret-position="-107">
+              <caret line="458" column="5" selection-start-line="458" selection-start-column="5" selection-end-line="458" selection-end-column="5" />
               <folding>
                 <element signature="e#0#15#0" expanded="true" />
               </folding>
             </state>
           </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="ECE_WI19.txt" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/quarter_data/ECE_WI19.txt">
-          <provider selected="true" editor-type-id="text-editor" />
         </entry>
       </file>
       <file leaf-file-name="scrapercleaner.py" pinned="false" current-in-tab="false">
@@ -69,6 +92,7 @@
     <option name="width" value="974" />
     <option name="height" value="1047" />
   </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
@@ -125,9 +149,9 @@
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
-      <option name="SDK_HOME" value="" />
+      <option name="SDK_HOME" value="C:\Users\llawrence\PycharmProjects\ece143\venv\Scripts\python.exe" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
+      <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/strip_catalogue.py" />
@@ -138,6 +162,7 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.strip_catalogue" />
         <item itemvalue="Python.strip_catalogue" />
       </list>
     </recent_temporary>
@@ -157,12 +182,11 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
-    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="1" visible="true" weight="0.110416666" />
+      <window_info active="true" content_ui="combo" id="Project" order="1" visible="true" weight="0.110416666" />
       <window_info anchor="bottom" id="TODO" order="10" />
       <window_info anchor="bottom" id="Event Log" order="2" side_tool="true" />
-      <window_info active="true" anchor="bottom" id="Run" order="6" visible="true" weight="0.32943678" />
+      <window_info anchor="bottom" id="Run" order="6" visible="true" weight="0.32943678" />
       <window_info anchor="bottom" id="Version Control" order="3" />
       <window_info anchor="bottom" id="Python Console" order="0" />
       <window_info id="Structure" order="2" side_tool="true" weight="0.25" />
@@ -230,8 +254,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/strip_catalogue.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="335">
-          <caret line="451" column="5" selection-start-line="451" selection-start-column="5" selection-end-line="451" selection-end-column="5" />
+        <state relative-caret-position="-107">
+          <caret line="458" column="5" selection-start-line="458" selection-start-column="5" selection-end-line="458" selection-end-column="5" />
           <folding>
             <element signature="e#0#15#0" expanded="true" />
           </folding>
