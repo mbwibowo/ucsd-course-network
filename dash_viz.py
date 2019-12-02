@@ -145,16 +145,20 @@ def switch_dept(dept):
             continue
         if v:
             for i in v:
-                weight = len(i)
+                # TODO doesn't show other departments yet
+                prereq_group = []
                 for j in i:
                     if j.startswith(dept):
                         # check if the course actually exists in catalog and still offered this year
                         if j in ece_desc and j.split()[1] in ece_offered:
-                            ece_prereqs.append([j.split()[1], k, 1/weight])
+                            prereq_group.append([j.split()[1], k])
                     # if from another department, just draw as a single node
                     else:
                         pass
                         #ece_prereqs.append([j.split()[0], k, 1/weight])
+                for i in prereq_group:
+                    ece_prereqs.append(i+[1/len(prereq_group)])
+
         # if no prereqs, add as independent node
         else:
             ece_courses.append(k)
