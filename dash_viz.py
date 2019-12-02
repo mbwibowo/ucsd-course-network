@@ -89,7 +89,7 @@ def generate_figure(G):
                     yaxis=dict(showgrid=False, zeroline=False, showticklabels=False,fixedrange=True))
            )
 
-depts = ['ECE', 'CSE', 'MAE', 'MATH', 'PHYS']
+depts = ['ECE', 'CSE', 'MAE', 'BENG', 'NANO', 'SE', 'MATH', 'PHYS']
 dropdown = [{'label': i, 'value': i} for i in depts]
 
 # external css for 'n columns' class and other various helpers
