@@ -55,7 +55,7 @@ def generate_figure(G):
         x1 = i[2],
         y1 = i[3],
         layer = 'below',
-        line = dict(color='rgba(127,127,127,{})'.format(i[4]),width=2)
+        line = dict(color='rgb(127,127,127)',width=2,dash='dot' if i[4] < 1 else 'solid')
         ) for i in edges]
 
     # extract the node coordinates
