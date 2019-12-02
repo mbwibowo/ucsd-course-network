@@ -5,6 +5,7 @@ from dash.dependencies import Input, Output
 import networkx as nx
 from networkx.drawing.nx_agraph import graphviz_layout
 import plotly.graph_objs as go
+import re
 
 from util import format_code, sort_codes
 from strip_catalogue import get_raw_course_list, get_quarter_offerings
@@ -139,7 +140,8 @@ def switch_dept(dept):
     for course in ece:
         k, v = course
         # remove grad classes and courses not offered this year
-        if len(k) >= 3 and k[0] == '2' or k not in ece_offered:
+        num = re.findall('\d+', k)[0]
+        if int(num) >= 200 or k not in ece_offered:
             continue
         if v:
             for i in v:
@@ -176,17 +178,18 @@ def switch_dept(dept):
         if G.has_edge(tail, head):
             print("has edge from {} to {}".format(tail,head))
             other_adj = [adj for adj in cycle if adj in G.predecessors(head) and adj != tail]
-            print("other adj: {}".format(other_adj))
-            # check if it's an OR or an AND (don't remove if it's an OR)
-            false_pos = False
-            for (k, v) in ece:
-                if k == head:
-                   for reqs in v:
-                       if other_adj[0] in reqs and tail in reqs:
-                           false_pos = True
-                           print("found req: {}".format(reqs))
-                           break
-                   break
+            if len(other_adj):
+                print("other adj: {}".format(other_adj))
+                # check if it's an OR or an AND (don't remove if it's an OR)
+                false_pos = False
+                for (k, v) in ece:
+                    if k == head:
+                       for reqs in v:
+                           if other_adj[0] in reqs and tail in reqs:
+                               false_pos = True
+                               print("found req: {}".format(reqs))
+                               break
+                       break
 
             if not false_pos:
                 print("removing edge from {} to {}".format(tail,head))
