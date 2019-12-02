@@ -419,20 +419,25 @@ def develop_plan(course_list, max_num, start_qtr):
 
     final_plan = []
     cur_quarter = start_qtr
-    needed_courses = set([course for course in course_list if course in prereq_map.keys() and course in combined_courses])
+    found_courses = [course for course in course_list if course in combined_courses]
+    needed_courses = set([course for course in found_courses if course in prereq_map.keys()])
 
     while len(needed_courses) != 0:
         offered_quarter_courses = [course for course in course_quarter_list[cur_quarter % 3] if course in needed_courses]
 
+        # eligible_courses = [t_course for t_course in offered_quarter_courses \
+        #                     if not set([sublist[random.randrange(len(sublist))] for sublist in prereq_map[t_course]]).intersection(needed_courses)]
         eligible_courses = [t_course for t_course in offered_quarter_courses \
-                            if not set([sublist[random.randrange(len(sublist))] for sublist in prereq_map[t_course]]).intersection(needed_courses)]
+                            if not set([list(set(sublist).intersection(set(found_courses)))[random.randrange(len(set(sublist).intersection(set(found_courses))))]
+                                        for sublist in prereq_map[t_course]]).intersection(needed_courses)]
 
-        # if cur_quarter % 1000000 == 0:
-        # print(cur_quarter)
-        # print(needed_courses)
-        # print([prereq_map[p_course] for p_course in needed_courses])
-        # print(offered_quarter_courses)
-        # print(eligible_courses)
+        if cur_quarter % 150 == 0:
+            print(cur_quarter)
+            print(needed_courses)
+            print([prereq_map[p_course] for p_course in needed_courses])
+            print(offered_quarter_courses)
+            print(eligible_courses)
+            return final_plan
 
         if len(eligible_courses) > max_num:
             eligible_courses = eligible_courses[:max_num]
@@ -441,6 +446,7 @@ def develop_plan(course_list, max_num, start_qtr):
         needed_courses.difference_update(eligible_courses)
         cur_quarter += 1
 
+    print(final_plan)
     return final_plan
 
 def develop_plan_recursion(course_list, max_num, start_qtr):
@@ -456,7 +462,8 @@ def develop_plan_recursion(course_list, max_num, start_qtr):
                 all_courses.update(cur_prereq_map_simple[course])
         cur_prereq_map_simple = develop_plan_recursion_helper(all_courses)
 
-    #print(all_courses)
+    print(1)
+    print(all_courses)
     return develop_plan(all_courses, max_num, start_qtr)
 
 def develop_plan_recursion_helper(course_list):
@@ -486,6 +493,9 @@ def iterate_plan_recursions(course_list, max_num, start_qtr, num_iterations):
 # print(develop_plan(['ECE 264A', 'ECE 35'], 3, 1))
 # print(get_clean_course_prereq('MATH'))
 # print(list([1, 2]))
-print(iterate_plan_recursions(['ECE 251A', 'ECE 251C', 'ECE 253', 'ECE 269', 'ECE 271A', 'ECE 271B', 'ECE 251B', 'ECE 273', 'ECE 143', 'MATH 140A', 'MATH 140B', 'ECE 275A', 'ECE 275B'], 3, 1, 20))
+ece_preset = ['ECE 5', 'ECE 25', 'ECE 30', 'ECE 35', 'ECE 45', 'ECE 65', 'ECE 100', 'ECE 101', 'ECE 107', 'ECE 109', 'ECE 153', 'ECE 161A', 'ECE 161B', 'ECE 161C']
+# print(iterate_plan_recursions(['MATH 140A'], 3, 1, 20))
+print(iterate_plan_recursions(ece_preset, 3, 1, 20))
+# print(iterate_plan_recursions(['ECE 251A', 'ECE 251C', 'ECE 253', 'ECE 269', 'ECE 271A', 'ECE 271B', 'ECE 251B', 'ECE 273', 'ECE 143', 'MATH 140A', 'MATH 140B', 'ECE 275A', 'ECE 275B'], 3, 1, 20))
 # print(min([[], [1, 2], [1]], key=len))
 
