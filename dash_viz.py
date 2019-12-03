@@ -202,7 +202,7 @@ def switch_dept(dept):
     #print(nx.algorithms.dag.dag_longest_path(G))
     #G.remove_nodes_from(list(nx.isolates(G)))
     fig = generate_figure(G)
-    return G, ece_desc, fig
+    return G, ece_desc, fig, ece
 
 dept_cache = dict()
 for i in depts:
@@ -225,7 +225,7 @@ def highlight_prereqs(dept,hoverData,selectedData):
     :type selectedData: dict or None
     :return: plotly.graph_objs.Figure
     """
-    G, ece_desc, fig = dept_cache[dept]
+    G, ece_desc, fig, ece = dept_cache[dept]
     title = "{} Undergraduate Courses".format(dept)
     prereqs = []
     desc = ""
@@ -239,14 +239,15 @@ def highlight_prereqs(dept,hoverData,selectedData):
         elif selectedData:
             point = selectedData['points'][0]['customdata']
 
-        # obtain full list of prereqs from graph, and fill the description template
+        # obtain list of prereqs from scraper, and fill the description template
         if point:
             desc_list = ece_desc[dept + " " + str(point)]
             prereqs = sort_codes(list(nx.algorithms.dag.ancestors(G, point)))
-            if not prereqs:
+            immediate_prereqs = next(c for c in ece if c[0] == point)[1]
+            if not immediate_prereqs:
                 prereqs_str = 'None'
             else:
-                prereqs_str = ', '.join([dept + " " + str(i) for i in prereqs])
+                prereqs_str = ', '.join(" or ".join(i) for i in immediate_prereqs)
             desc = desc_tmpl.format(dept + " " + str(point), desc_list[0], prereqs_str, desc_list[1])
 
         # obtain node indices for dash to select
@@ -260,11 +261,11 @@ def highlight_prereqs(dept,hoverData,selectedData):
         fig['data'][0]['selectedpoints'] = prereq_index
 
         # change the opacity for edges which are on the prerequisite tree for selected course
-        for i,(j,k,w) in enumerate(G.edges.data('weight')):
+        for i,(j,k) in enumerate(G.edges()):
             if j in prereqs and k in prereqs:
-                fig['layout']['shapes'][i]['line']['color'] = 'rgba(127,127,127,{})'.format(w)
+                fig['layout']['shapes'][i]['line']['color'] = 'rgb(127,127,127)'
             else:
-                fig['layout']['shapes'][i]['line']['color'] = 'rgba(127,127,127,{})'.format(w*0.5)
+                fig['layout']['shapes'][i]['line']['color'] = 'rgba(127,127,127,0.5)'
     except:
         pass
 
