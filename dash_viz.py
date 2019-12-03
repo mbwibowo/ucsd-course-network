@@ -125,12 +125,16 @@ desc_tmpl = """
 def switch_dept(dept):
     ece_raw = get_raw_course_list(dept)
     ece = clean_scrape(ece_raw)
-    # TODO use dict comprehension?
+    # strip leading zero from course code (edge case: MAE 02, etc.)
+    ece = [(i.lstrip("0"), j) for i, j in ece]
     ece_desc = dict()
     for k, v in ece_raw.items():
         # split into course code, course title, and number of units (unused)
         k_split = k.replace("(", ".").split(".")
-        ece_desc[k_split[0]] = [k_split[1].strip(), v[0]]
+        # remove leading zero from course code
+        course_dept_code = k_split[0].split()
+        course_code = course_dept_code[0] + " " + course_dept_code[1].lstrip("0")
+        ece_desc[course_code] = [k_split[1].strip(), v[0]]
 
     ece_offered = get_quarter_offerings(dept, "FA19") + get_quarter_offerings(dept, "WI20") + get_quarter_offerings(dept, "SP20")
     # remove the "ECE" tags and draw each department as a single node
@@ -150,8 +154,9 @@ def switch_dept(dept):
                 for j in i:
                     if j.startswith(dept):
                         # check if the course actually exists in catalog and still offered this year
-                        if j in ece_desc and j.split()[1] in ece_offered:
-                            prereq_group.append([j.split()[1], k])
+                        course_code = j.split()[1].lstrip("0")
+                        if j in ece_desc and course_code in ece_offered:
+                            prereq_group.append([course_code, k])
                     # if from another department, just draw as a single node
                     else:
                         pass
@@ -165,11 +170,11 @@ def switch_dept(dept):
 
     G = generate_graph(ece_courses, ece_prereqs)
 
+    # break up cycles if they are redundant (ex: class C requires A and B, but B requires A)
     for cycle in nx.cycle_basis(G.to_undirected()):
         # if there is a distinct head and tail, and head is connected directly to tail
         head = None
         tail = None
-        #print(cycle)
         for i in cycle:
             others = cycle.copy()
             others.remove(i)
@@ -180,10 +185,10 @@ def switch_dept(dept):
             elif all(o in descendants for o in others):
                 tail = i
         if G.has_edge(tail, head):
-            print("has edge from {} to {}".format(tail,head))
+            #print("has edge from {} to {}".format(tail,head))
             other_adj = [adj for adj in cycle if adj in G.predecessors(head) and adj != tail]
             if len(other_adj):
-                print("other adj: {}".format(other_adj))
+                #print("other adj: {}".format(other_adj))
                 # check if it's an OR or an AND (don't remove if it's an OR)
                 false_pos = False
                 for (k, v) in ece:
@@ -191,7 +196,7 @@ def switch_dept(dept):
                        for reqs in v:
                            if other_adj[0] in reqs and tail in reqs:
                                false_pos = True
-                               print("found req: {}".format(reqs))
+                               #print("found req: {}".format(reqs))
                                break
                        break
 

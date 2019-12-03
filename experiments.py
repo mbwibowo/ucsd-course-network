@@ -42,10 +42,10 @@ def generate_graph(dept, courses, undergrad=False):
                 weight = len(i)
                 for j in i:
                     if j.startswith(dept):
-                        prereqs.append([j.split()[1], k, 1/weight])
+                        prereqs.append([j.split()[1].lstrip("0"), k, 1/weight])
         # if no prereqs, add as independent node
         else:
-            indep_courses.append(k)
+            indep_courses.append(k.lstrip("0"))
 
     G = nx.DiGraph()
     G.add_nodes_from(indep_courses)
@@ -79,7 +79,7 @@ def get_flexibility(G):
     return sum
 
 if __name__ == "__main__":
-    depts = ['ECE', 'CSE', 'MAE', 'BENG', 'NANO', 'SE']
+    depts = ['ECE', 'CSE', 'MAE', 'BENG', 'NANO', 'SE', 'MATH', 'PHYS']
     for dept in depts:
         raw_courses = get_raw_course_list(dept)
         courses = clean_scrape(raw_courses)
@@ -94,5 +94,5 @@ if __name__ == "__main__":
         print("ancestor count of each course:")
         for n in G.nodes():
             print("{}, {}".format(n, len(nx.algorithms.dag.ancestors(G, n))))
-        print("flexibility: {}".format(get_flexibility(G)/G.number_of_nodes()))
+        print("flexibility: {} {}".format(get_flexibility(G),G.number_of_nodes()))
 
