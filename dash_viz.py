@@ -7,7 +7,6 @@ from networkx.drawing.nx_agraph import graphviz_layout
 import plotly.graph_objs as go
 import re
 
-from util import format_code, sort_codes
 from strip_catalogue import get_raw_course_list, get_quarter_offerings
 from scrapercleaner import clean_scrape
 
@@ -89,8 +88,8 @@ def generate_figure(G):
                     yaxis=dict(showgrid=False, zeroline=False, showticklabels=False,fixedrange=True))
            )
 
+# predefined departments to display
 depts = ['ECE', 'CSE', 'MAE', 'BENG', 'NANO', 'SE', 'MATH', 'PHYS']
-dropdown = [{'label': i, 'value': i} for i in depts]
 
 # external css for 'n columns' class and other various helpers
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -104,9 +103,7 @@ app.layout = html.Div([
         html.Div(className='row', children = [
             html.Div([
                 dcc.Markdown('### Choose a department: '),
-                dcc.Dropdown(id='dept-select', options=dropdown, value='ECE', clearable=False),
-                # TODO: use pattern to limit
-                #dcc.Input(id='code',placeholder='Course code (e.g. 123A)',debounce=True)
+                dcc.Dropdown(id='dept-select', options=[{'label': i, 'value': i} for i in depts], value='ECE', clearable=False),
             ], className='three columns'),
             html.Div([dcc.Markdown('',id='desc')], className='nine columns')
         ])
@@ -122,30 +119,36 @@ desc_tmpl = """
 {}
 """
 
-def switch_dept(dept):
-    ece_raw = get_raw_course_list(dept)
-    ece = clean_scrape(ece_raw)
+def get_dept_info(dept):
+    """
+    Gets the full course info for a specific department.
+    :param dept: department code
+    :type dept: str
+    :return: networkx.DiGraph, list, list, list
+    """
+    raw_courses = get_raw_course_list(dept)
+    courses = clean_scrape(raw_courses)
     # strip leading zero from course code (edge case: MAE 02, etc.)
-    ece = [(i.lstrip("0"), j) for i, j in ece]
-    ece_desc = dict()
-    for k, v in ece_raw.items():
+    courses = [(i.lstrip("0"), j) for i, j in courses]
+    course_desc = dict()
+    for k, v in raw_courses.items():
         # split into course code, course title, and number of units (unused)
         k_split = k.replace("(", ".").split(".")
         # remove leading zero from course code
         course_dept_code = k_split[0].split()
         course_code = course_dept_code[0] + " " + course_dept_code[1].lstrip("0")
-        ece_desc[course_code] = [k_split[1].strip(), v[0]]
+        course_desc[course_code] = [k_split[1].strip(), v[0]]
 
-    ece_offered = get_quarter_offerings(dept, "FA19") + get_quarter_offerings(dept, "WI20") + get_quarter_offerings(dept, "SP20")
-    # remove the "ECE" tags and draw each department as a single node
+    courses_offered = get_quarter_offerings(dept, "FA19") + get_quarter_offerings(dept, "WI20") + get_quarter_offerings(dept, "SP20")
+    # remove the department tags and draw each department as a single node
     # use weighted edges to show interchangeable prereqs
-    ece_courses = []
-    ece_prereqs = []
-    for course in ece:
+    indep_courses = []
+    course_prereqs = []
+    for course in courses:
         k, v = course
         # remove grad classes and courses not offered this year
         num = re.findall('\d+', k)[0]
-        if int(num) >= 200 or k not in ece_offered:
+        if int(num) >= 200 or k not in courses_offered:
             continue
         if v:
             for i in v:
@@ -155,24 +158,24 @@ def switch_dept(dept):
                     if j.startswith(dept):
                         # check if the course actually exists in catalog and still offered this year
                         course_code = j.split()[1].lstrip("0")
-                        if j in ece_desc and course_code in ece_offered:
+                        if j in course_desc and course_code in courses_offered:
                             prereq_group.append([course_code, k])
                     # if from another department, just draw as a single node
                     else:
                         pass
-                        #ece_prereqs.append([j.split()[0], k, 1/weight])
+                        #course_prereqs.append([j.split()[0], k, 1/weight])
                 for i in prereq_group:
-                    ece_prereqs.append(i+[1/len(prereq_group)])
+                    course_prereqs.append(i+[1/len(prereq_group)])
 
         # if no prereqs, add as independent node
         else:
-            ece_courses.append(k)
+            indep_courses.append(k)
 
-    G = generate_graph(ece_courses, ece_prereqs)
+    G = generate_graph(indep_courses, course_prereqs)
 
     # break up cycles if they are redundant (ex: class C requires A and B, but B requires A)
     for cycle in nx.cycle_basis(G.to_undirected()):
-        # if there is a distinct head and tail, and head is connected directly to tail
+        # check if there is a distinct head and tail for a cycle, and head is connected directly to tail
         head = None
         tail = None
         for i in cycle:
@@ -185,18 +188,16 @@ def switch_dept(dept):
             elif all(o in descendants for o in others):
                 tail = i
         if G.has_edge(tail, head):
-            #print("has edge from {} to {}".format(tail,head))
+            # find the other predecessor of head for the cycle
             other_adj = [adj for adj in cycle if adj in G.predecessors(head) and adj != tail]
             if len(other_adj):
-                #print("other adj: {}".format(other_adj))
                 # check if it's an OR or an AND (don't remove if it's an OR)
                 false_pos = False
-                for (k, v) in ece:
+                for (k, v) in courses:
                     if k == head:
                        for reqs in v:
                            if other_adj[0] in reqs and tail in reqs:
                                false_pos = True
-                               #print("found req: {}".format(reqs))
                                break
                        break
 
@@ -207,17 +208,16 @@ def switch_dept(dept):
     #print(nx.algorithms.dag.dag_longest_path(G))
     #G.remove_nodes_from(list(nx.isolates(G)))
     fig = generate_figure(G)
-    return G, ece_desc, fig, ece
+    return G, course_desc, fig, courses
 
+# preload the data for specific departments, so they don't need to be fetched every time
 dept_cache = dict()
 for i in depts:
     print("caching {}".format(i))
-    dept_cache[i] = switch_dept(i)
+    dept_cache[i] = get_dept_info(i)
 
 
-# TODO fix mobile support for touch/click?
 @app.callback([Output('title', 'children'),Output('graph', 'figure'),Output('desc', 'children')],[Input('dept-select', 'value'), Input('graph', 'hoverData'),Input('graph','selectedData')])
-        #Input('code','value')])
 def highlight_prereqs(dept,hoverData,selectedData):
     """
     Callback for click and hover events from Dash.
@@ -230,7 +230,7 @@ def highlight_prereqs(dept,hoverData,selectedData):
     :type selectedData: dict or None
     :return: plotly.graph_objs.Figure
     """
-    G, ece_desc, fig, ece = dept_cache[dept]
+    G, course_desc, fig, courses = dept_cache[dept]
     title = "{} Undergraduate Courses".format(dept)
     prereqs = []
     desc = ""
@@ -244,11 +244,11 @@ def highlight_prereqs(dept,hoverData,selectedData):
         elif selectedData:
             point = selectedData['points'][0]['customdata']
 
-        # obtain list of prereqs from scraper, and fill the description template
+        # obtain list of immediate prereqs from scraper, full prereqs from graph, and fill the description template
         if point:
-            desc_list = ece_desc[dept + " " + str(point)]
+            desc_list = course_desc[dept + " " + str(point)]
             prereqs = sort_codes(list(nx.algorithms.dag.ancestors(G, point)))
-            immediate_prereqs = next(c for c in ece if c[0] == point)[1]
+            immediate_prereqs = next(c for c in courses if c[0] == point)[1]
             if not immediate_prereqs:
                 prereqs_str = 'None'
             else:

@@ -15,6 +15,7 @@ def get_avg_num_prereqs(courses, undergrad=False):
     :return: int
     """
     assert isinstance(courses, list) or isinstance(courses, tuple)
+    assert isinstance(undergrad, bool)
     sum = 0
     count = 0
     for (course, prereqs) in courses:
@@ -28,6 +29,20 @@ def get_avg_num_prereqs(courses, undergrad=False):
     return sum/count
 
 def generate_graph(dept, courses, undergrad=False):
+    """
+    Generates a graph for testing, based on a list of courses (see scrapercleaner.clean_scrape() for format).
+    :param dept: department name
+    :type dept: str
+    :param courses: list of courses from clean_scrape()
+    :type courses: list or tuple
+    :param undergrad: whether only undergrad should be considered
+    :type undergrad: true
+    :return: networkx.DiGraph
+    """
+    assert isinstance(dept, str)
+    assert isinstance(courses, list) or isinstance(courses, tuple)
+    assert isinstance(undergrad, bool)
+
     indep_courses = []
     prereqs = []
     for course in courses:
@@ -55,6 +70,11 @@ def generate_graph(dept, courses, undergrad=False):
 def find_root(G, child):
     """
     Find the root of any given node.
+    :param G: graph to search
+    :type G: networkx.DiGraph
+    :param child: child node to find root
+    :type child: str
+    :return: str
     """
     assert isinstance(G, nx.classes.digraph.DiGraph)
     assert isinstance(child, str)
@@ -66,6 +86,14 @@ def find_root(G, child):
         return find_root(G, parent[0])
 
 def get_flexibility(G):
+    """
+    Computes the number of paths between each end node and all root nodes.
+    :param G: graph to analyze
+    :type G: networkx.DiGraph
+    :return: float
+    """
+    assert isinstance(G, nx.classes.digraph.DiGraph)
+
     heads = set()
     for i in G.nodes:
         r = find_root(G, i)
