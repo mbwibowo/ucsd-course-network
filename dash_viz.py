@@ -247,7 +247,7 @@ def highlight_prereqs(dept,hoverData,selectedData):
         # obtain list of immediate prereqs from scraper, full prereqs from graph, and fill the description template
         if point:
             desc_list = course_desc[dept + " " + str(point)]
-            prereqs = sort_codes(list(nx.algorithms.dag.ancestors(G, point)))
+            prereqs = list(nx.algorithms.dag.ancestors(G, point))
             immediate_prereqs = next(c for c in courses if c[0] == point)[1]
             if not immediate_prereqs:
                 prereqs_str = 'None'
