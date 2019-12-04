@@ -6,6 +6,47 @@ import random
 import scrapercleaner
 from bs4 import BeautifulSoup
 
+def switch_dept_simplified(dept):
+    ece_raw = get_raw_course_list(dept)
+    ece = clean_scrape(ece_raw)
+    # TODO use dict comprehension?
+    ece_desc = dict()
+    for k, v in ece_raw.items():
+        # split into course code, course title, and number of units (unused)
+        k_split = k.replace("(", ".").split(".")
+        ece_desc[k_split[0]] = [k_split[1].strip(), v[0]]
+
+    ece_offered = get_quarter_offerings(dept, "FA19") + \
+                  get_quarter_offerings(dept, "WI20") + \
+                  get_quarter_offerings(dept, "SP20")
+
+    # remove the "ECE" tags and draw each department as a single node
+    # use weighted edges to show interchangeable prereqs
+    ece_courses = []
+    ece_prereqs = []
+    for course in ece:
+        k, v = course
+        # remove grad classes and courses not offered this year
+        if len(k) >= 3 and k[0] == '2' or k not in ece_offered:
+            continue
+        if v:
+            for i in v:
+                weight = len(i)
+                for j in i:
+                    if j.startswith(dept):
+                        # check if the course actually exists in catalog and still offered this year
+                        if j in ece_desc and j.split()[1] in ece_offered:
+                            ece_prereqs.append([j.split()[1], k, 1/weight])
+                    # if from another department, just draw as a single node
+                    else:
+                        pass
+                        #ece_prereqs.append([j.split()[0], k, 1/weight])
+        # if no prereqs, add as independent node
+        else:
+            ece_courses.append(k)
+
+    G = generate_graph(ece_courses, ece_prereqs)
+
 def get_courses_for_major(major):
     '''
     Returns a list of tuples of (course name, description, raw prereqs), and then saves the result to file
@@ -307,8 +348,6 @@ def get_quarter_helper(webpage):
     # return unique numbers
     return list(set(course_list))
 
-
-
 """
 
 ======================================
@@ -394,6 +433,10 @@ def develop_plan(course_list, max_num, start_qtr):
     prereq_map = {}
     for major in major_list:
         fa_major_list = get_quarter_list(major, 'FA19')
+        # if major == 'ECE':
+        #     print(8)
+        #     print(fa_major_list)
+        #     print(9)
         fa_list.extend([major + ' ' + course for course in fa_major_list])
 
         wi_major_list = get_quarter_list(major, 'WI19')
@@ -406,6 +449,7 @@ def develop_plan(course_list, max_num, start_qtr):
         prereq_map.update({major + ' ' + val[0]:val[1] or [] for val in prereq_list})
 
     fa_courses = [course for course in course_list if course in fa_list]
+
     wi_courses = [course for course in course_list if course in wi_list]
     sp_courses = [course for course in course_list if course in sp_list]
     combined_courses = fa_courses.copy()
@@ -427,11 +471,16 @@ def develop_plan(course_list, max_num, start_qtr):
 
         # eligible_courses = [t_course for t_course in offered_quarter_courses \
         #                     if not set([sublist[random.randrange(len(sublist))] for sublist in prereq_map[t_course]]).intersection(needed_courses)]
+        # temp1_courses = [(t_course, prereq_map[t_course]) for t_course in offered_quarter_courses]
+        # temp1_courses = [(course_pair[0], prereq_map[t_course]) for course_pair in temp1_courses \
+        #                  if list(set(sublist).intersection(set(found_courses))) != []]
+
         eligible_courses = [t_course for t_course in offered_quarter_courses \
                             if not set([list(set(sublist).intersection(set(found_courses)))[random.randrange(len(set(sublist).intersection(set(found_courses))))]
-                                        for sublist in prereq_map[t_course]]).intersection(needed_courses)]
+                                        for sublist in prereq_map[t_course] if list(set(sublist).intersection(set(found_courses))) != []]).intersection(needed_courses)]
 
         if cur_quarter % 150 == 0:
+            print('ERROR')
             print(cur_quarter)
             print(needed_courses)
             print([prereq_map[p_course] for p_course in needed_courses])
@@ -446,7 +495,6 @@ def develop_plan(course_list, max_num, start_qtr):
         needed_courses.difference_update(eligible_courses)
         cur_quarter += 1
 
-    print(final_plan)
     return final_plan
 
 def develop_plan_recursion(course_list, max_num, start_qtr):
@@ -462,8 +510,8 @@ def develop_plan_recursion(course_list, max_num, start_qtr):
                 all_courses.update(cur_prereq_map_simple[course])
         cur_prereq_map_simple = develop_plan_recursion_helper(all_courses)
 
-    print(1)
-    print(all_courses)
+    # print(1)
+    # print(all_courses)
     return develop_plan(all_courses, max_num, start_qtr)
 
 def develop_plan_recursion_helper(course_list):
@@ -485,17 +533,103 @@ def develop_plan_recursion_helper(course_list):
     return {course: [sublist[random.randrange(len(sublist))] for sublist in prereq_map_init[course]] \
             for course in prereq_map_init}
 
+def iterate_plan(course_list, max_num, start_qtr, num_iterations):
+    return min([develop_plan(course_list, max_num, start_qtr) for i in range(num_iterations)], key=len)
+
+
 def iterate_plan_recursions(course_list, max_num, start_qtr, num_iterations):
     return min([develop_plan_recursion(course_list, max_num, start_qtr) for i in range(num_iterations)], key=len)
 
+
+
 # FIX 0 problem
-# print(get_raw_course_list('MATH'))
+# print(get_raw_course_list('CHEM'))
 # print(develop_plan(['ECE 264A', 'ECE 35'], 3, 1))
 # print(get_clean_course_prereq('MATH'))
 # print(list([1, 2]))
-ece_preset = ['ECE 5', 'ECE 25', 'ECE 30', 'ECE 35', 'ECE 45', 'ECE 65', 'ECE 100', 'ECE 101', 'ECE 107', 'ECE 109', 'ECE 153', 'ECE 161A', 'ECE 161B', 'ECE 161C']
+# NOTE EXCLUDE GE. MAY VARY SLIGHTLY BETWEEN SPECIALIZATIONS
+ece_preset = ['MATH 10A', 'ECE 5', 'ECE 25', 'ECE 30', 'ECE 35', 'ECE 45', 'ECE 65', 'ECE 15', 'ECE 17', 'MATH 18', 'MATH 20A', \
+              'MATH 20B', 'MATH 20C', 'MATH 20D', 'MATH 20E', 'CHEM 6A', 'PHYS 2A', 'PHYS 2B', 'PHYS 2C', 'ECE 100', \
+              'ECE 101', 'ECE 107', 'ECE 109', 'ECE 171A', 'ECE 174', 'ECE 175A', 'ECE 171B', 'ECE 111', 'ECE 153', \
+              'ECE 161A', 'ECE 161B', 'ECE 161C', 'ECE 164', 'ECE 143', 'ECE 158A', 'ECE 158B', 'ECE 16', 'ECE 102']
+cse_preset = ['CSE 8B', 'CSE 12', 'CSE 15L', 'CSE 20', 'CSE 21', 'CSE 30', 'CSE 3', 'CSE 7', 'MATH 20A', 'MATH 20B', \
+              'MATH 20C', 'MATH 18', 'PHYS 2A', 'PHYS 2B', 'CSE 103', 'CSE 100', 'CSE 101', 'CSE 105', 'CSE 110', \
+              'CSE 140', 'CSE 141', 'CSE 120', 'CSE 130', 'CSE 107', 'CSE 150A', 'ECE 174', 'ECE 153', 'CSE 151', \
+              'CSE 152', 'CSE 154', 'CSE 156', 'CSE 166']
+nano_preset = ['MATH 18', 'MATH 20A', 'MATH 20B', 'MATH 20C','MATH 20D', 'MATH 20E', 'PHYS 2A', 'PHYS 2B', 'PHYS 2C', \
+               'PHYS 2D', 'CHEM 6A', 'CHEM 6B', 'CHEM 6C', 'NANO 15', 'NANO 106', 'NANO 107', 'NANO 1', 'NANO 101', \
+               'NANO 102', 'NANO 103', 'NANO 104', 'NANO 110', 'NANO 111', 'NANO 112', 'NANO 120A', 'NANO 120B', \
+               'NANO 141A', 'NANO 141B', 'NANO 108', 'NANO 148', 'NANO 158', 'NANO 174', 'NANO 168']
+se_preset = ['MATH 20A', 'MATH 20B', 'MATH 20C', 'SE 1', 'SE 3', 'CHEM 6A', 'PHYS 2A', 'PHYS 2B', 'MATH 20D', 'MATH 18', \
+             'MATH 20E', 'SE 101A', 'SE 101B', 'SE 9', 'PHYS 2C', 'SE 110A', 'SE 110B', 'SE 104', 'SE 101C', 'SE 115', \
+             'SE 131', 'SE 121A', 'SE 121B', 'SE 130B', 'SE 130A', 'SE 125', 'SE 140A', 'SE 140B', 'SE 167', 'SE 168', \
+             'SE 163', 'SE 160A', 'SE 160B']
+mae_preset = ['MATH 20B', 'MATH 20C', 'PHYS 2A', 'PHYS 2B', 'MAE 3', 'MATH 18', 'MATH 20E', 'MAE 8', 'MAE 30A', 'MAE 30B' \
+              'MAE 131A', 'MAE 101A', 'MAE 101B', 'MAE 143A', 'MAE 143B', 'MAE 170', 'MAE 160', 'MAE 171A', 'MAE 156B', \
+              'MAE 156A', 'MATH 20A', 'CHEM 6A', 'MATH 20D', 'PHYS 2C', 'ESYS 101', 'MAE 3', 'CENG 100', 'MAE 105', \
+              'MAE 107', 'CHEM 171', 'MAE 101C', 'MAE 150', 'MAE 122', 'ECE 174', 'MAE 120', 'ECE 143', 'MAE 130']
+beng_preset = ['BENG 1', 'BILD 1', 'CHEM 6A', 'CHEM 6B', 'MAE 8', 'MATH 20A', 'MATH 20B', 'MATH 20C', 'PHYS 2A', \
+               'PHYS 2B', 'PHYS 2BL', 'BENG 100', 'BENG 109', 'CHEM 7L', 'MAE 3', 'MAE 140', 'MATH 20D', 'MATH 20E', \
+               'MATH 20F', 'PHYS 2C', 'PHYS 2CL', 'BENG 101', 'BENG 103B', 'BENG 110', 'BENG 112A', 'BENG 140A', \
+               'BENG 140B', 'BENG 172', 'BENG 186B', 'BENG 187A', 'BENG 191', 'MAE 170', 'BENG 122A', 'BENG 125', \
+               'BENG 130', 'BENG 186A', 'BENG 187B', 'BENG 187C', 'BENG 187D', 'BENG 169A', 'BENG 169B', 'BENG 191', \
+               'MAE 107', 'MAE 150', 'ECE 171', 'ECE 174']
+
+
+# course_preset = ['ECE 101', 'ECE 45', 'ECE 35', 'MATH 18', 'MATH 20A', 'MATH 20B', 'PHYS 2A', 'MATH 10A']
+# print(iterate_plan(course_preset, 5, 1, 200))
+#
+#
+# ece_res = iterate_plan(ece_preset, 4, 1, 200)
+# ece_flat = [course for sublist in ece_res for course in sublist]
+#
+# prereq_map = {}
+# prereq_map.update({'ECE' + ' ' + val[0]: val[1] or [] for val in get_clean_course_prereq('ECE')})
+# prereq_map.update({'MATH' + ' ' + val[0]: val[1] or [] for val in get_clean_course_prereq('MATH')})
+# prereq_map.update({'PHYS' + ' ' + val[0]: val[1] or [] for val in get_clean_course_prereq('PHYS')})
+# prereq_map.update({'CHEM' + ' ' + val[0]: val[1] or [] for val in get_clean_course_prereq('CHEM')})
+#
+#
+# #print(prereq_map)
+#
+# ece_flat_prereqs_map = {course: [p_course for sublist in prereq_map[course] for p_course in sublist] for course in ece_flat}
+#
+# prev_classes = set()
+# plan_prereq = []
+# for sublist in ece_res:
+#     prev_classes.update(set(sublist))
+#     plan_prereq.extend([(course, list(set(ece_flat_prereqs_map[course]).intersection(prev_classes))) for course in sublist])
+#     # ece_flat_trim_prereqs = [(pair[0], set(pair[1]).intersection(set(ece_flat))) for pair in ece_flat_prereqs]
+#
+# print("=========")
+# print(ece_res)
+# print(len(ece_res))
+# print(plan_prereq)
+
+# print(len(ece_res))
+# cse_res = iterate_plan(cse_preset, 5, 1, 200)
+# print(cse_res)
+# # print(len(set(cse_preset)))
+# print(len(cse_res))
+# nano_res = iterate_plan(nano_preset, 5, 1, 200)
+# print(nano_res)
+# # print(len(set(nano_preset)))
+# print(len(nano_res))
+# se_res = iterate_plan(se_preset, 5, 1, 200)
+# print(se_res)
+# # print(len(set(se_preset)))
+# print(len(se_res))
+# mae_res = iterate_plan(mae_preset, 5, 1, 200)
+# print(mae_res)
+# # print(len(set(mae_preset)))
+# print(len(mae_res))
+# beng_res = iterate_plan(beng_preset, 5, 1, 200)
+# print(beng_res)
+# # print(len(set(beng_preset)))
+# print(len(beng_res))
+
 # print(iterate_plan_recursions(['MATH 140A'], 3, 1, 20))
-print(iterate_plan_recursions(ece_preset, 3, 1, 20))
-# print(iterate_plan_recursions(['ECE 251A', 'ECE 251C', 'ECE 253', 'ECE 269', 'ECE 271A', 'ECE 271B', 'ECE 251B', 'ECE 273', 'ECE 143', 'MATH 140A', 'MATH 140B', 'ECE 275A', 'ECE 275B'], 3, 1, 20))
+# print(iterate_plan_recursions(ece_preset, 3, 1, 20))
+# print(iterate_plan_recursions(cse_preset, 3, 1, 20))
 # print(min([[], [1, 2], [1]], key=len))
 
