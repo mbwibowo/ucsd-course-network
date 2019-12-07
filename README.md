@@ -6,6 +6,11 @@ See `requirements.txt` and/or `environment.yml` for required packages. Note that
 To deploy on Heroku, use the buildpack `https://github.com/jrkerns/heroku-buildpack-conda.git`.
 The Heroku setup uses Conda, since `graphviz`, which is not a Python package, needs to be installed.
 
+To run the website locally, run `dash_viz.py`.
+
+## Analysis
+See `chart_viz.ipynb` for network analysis and chart generation from the data.
+
 ## Documentation
 
 ### Data preprocessing
@@ -20,27 +25,25 @@ raw_courses = strip_catalogue.get_raw_course_list('ECE')
 courses = scrapercleaner.clean_scrape(raw_courses)
 ```
 
-Strip Catalogue Overview.
+#### Strip Catalogue Overview
 
-Summary: Used for gaining raw information from UCSD websites. This information is then parsed in the future by the scraper cleaner. Additionally performs planning tasks using scraped information.
+**Summary**: Used for gaining raw information from UCSD websites. This information is then parsed in the future by the scraper cleaner. Additionally performs planning tasks using scraped information.
 
-Callable Functions: 
-1) get_raw_course_list(): Returns the raw list of tuples of (course name, description, prereq) in the specified department, then writes to file.
-2) get_quarter_list(): Returns a list of offered courses in the major in the given quarter and writes to file. NOTE: quarter is of the form WI20, FA19, SP20, etc.
-3) develop_plan(): Returns the fastest route to completion of the course list over quarters taking max_num courses per quarter.
-4) develop_plan_recursion(): Recursively generates all of the prereqs for a given course list, then runs the course planner.
-5) develop_plan_recursion_helper(): Returns the prereq mapping for all majors given in course_list
-6) iterate_plan(): Takes the minimum length planner of num_interations executions of develop_plan
-7) iterate_plan_recursions(): Takes the minimum length planner of num_interations executions of develop_plan using a
+Callable Functions:
+1) `get_raw_course_list()`: Returns the raw list of tuples of (course name, description, prereq) in the specified department, then writes to file.
+2) `get_quarter_list()`: Returns a list of offered courses in the major in the given quarter and writes to file. NOTE: quarter is of the form WI20, FA19, SP20, etc.
+3) `develop_plan()`: Returns the fastest route to completion of the course list over quarters taking `max_num` courses per quarter.
+4) `develop_plan_recursion()`: Recursively generates all of the prereqs for a given course list, then runs the course planner.
+5) `develop_plan_recursion_helper()`: Returns the prereq mapping for all majors given in `course_list`
+6) `iterate_plan()`: Takes the minimum length planner of `num_iterations` executions of `develop_plan`
+7) `iterate_plan_recursions()`: Takes the minimum length planner of `num_iterations` executions of `develop_plan` using a
     recursively generated prereqs
-    
-NOTE: all other functions are meant for behind the scenes processing, but if you wish to learn more, documentation is included within the functions.
 
+**NOTE**: all other functions are meant for behind the scenes processing, but if you wish to learn more, documentation is included within the functions.
 
+#### Scraper Cleaner Overview
 
-Scraper Cleaner Overview.
-
-Summary: Used to transform raw data from Strip Catalogue into useable information for graphing and planning. 
+**Summary**: Used to transform raw data from Strip Catalogue into useable information for graphing and planning.
 
 The output of `clean_scrape()` is a tuple of tuples containing each course with its prerequisites.
 ```
@@ -49,8 +52,7 @@ The output of `clean_scrape()` is a tuple of tuples containing each course with 
 The prerequisite list consists of multiple sublists, which indicate interchangeable courses ("OR" prereqs).
 In the example above, MATH 18 and MATH 31AH are interchangeable while the rest are required.'
 
-NOTE: clean_scrape(raw_course_list) takes as input the previously mentioned strip_cataloge.get_raw_course_list(major). 
-
+**NOTE**: `clean_scrape(raw_course_list)` takes as input the previously mentioned `strip_catalogue.get_raw_course_list(major)`.
 
 ### Graph generation
 From `clean_scrape()`, the data is used to generate a directed graph in NetworkX.
@@ -73,7 +75,7 @@ The way this is done in Dash is through callbacks, which are run when any target
 If a node is clicked or hovered, the callback retrieves the course data, and traverses the graph to find all of its ancestors (i.e. prereqs, the prereqs of those, and so on), which are then highlighted. The opacity of the other nodes and edges are lowered.
 
 #### Future work (?)
-Currently, the scrapers used in our system (get_raw_course_list, get_quarter_list, clear_scrape) are based off of UCSD's current html formatting. If something were to change in the websites, then we would need to update our regex parsing of the html. This could easily be avoided by either receiving course information directly from UCSD databases, or by notifcation of the html structure change in advance.
+Currently, the scrapers used in our system (`get_raw_course_list`, `get_quarter_list`, `clear_scrape`) are based off of UCSD's current html formatting. If something were to change in the websites, then we would need to update our regex parsing of the html. This could easily be avoided by either receiving course information directly from UCSD databases, or by notifcation of the html structure change in advance.
 
 Using Dash and Plotly is quite cumbersome, as they aren't really designed for displaying directed graphs and interacting with them.
 For instance, drawing arrows needs to be done separately from edges, and can only be positioned in pixel coordinates, rather than grid coordinates, making it impossible to support different window sizes.

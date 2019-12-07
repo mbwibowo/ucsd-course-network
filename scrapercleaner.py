@@ -1,27 +1,33 @@
 import re
 
-
 def split_at_or(prereq_list):
    '''
    Don't call this
    Splits prereqs 'or' into list
+   :param prereq_list: prereq list
+   :type prereq_list: list
+   :return: generator(str)
    '''
+   assert isinstance(prereq_list, list)
+   assert all(isinstance(i, str) for i in prereq_list)
    for elem in prereq_list:
       yield elem.split('or')
 
 def course_splitter(course_str):
     '''
     Used to split MAJORXXX into MAJOR XXX
+    :param course_str: course code
+    :type course_str: str
+    :return: str
     '''
     if not course_str:
        return None
 
+    assert isinstance(course_str, str)
     major_str = ' '.join(re.findall("[a-zA-Z]{2,}\d", course_str))
     num_str = ' '.join(re.findall('\d+[a-zA-Z]*', course_str))
 
     return major_str[:-1] + " " + num_str
-
-
 
 ######### Call Function Below ###########
 def clean_scrape(raw_course_list):
@@ -29,8 +35,11 @@ def clean_scrape(raw_course_list):
     Input is from get_raw_course_list() function
     Cleans up scraper used to get prereq courses
 
-    :returns:list
+    :param raw_course_list: dict of raw courses
+    :type raw_course_list: dict
+    :return: tuple
     '''
+    assert isinstance(raw_course_list, dict)
     a = raw_course_list
 
     #General HTML clean up

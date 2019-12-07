@@ -6,47 +6,6 @@ import random
 import scrapercleaner
 from bs4 import BeautifulSoup
 
-def switch_dept_simplified(dept):
-    ece_raw = get_raw_course_list(dept)
-    ece = clean_scrape(ece_raw)
-    # TODO use dict comprehension?
-    ece_desc = dict()
-    for k, v in ece_raw.items():
-        # split into course code, course title, and number of units (unused)
-        k_split = k.replace("(", ".").split(".")
-        ece_desc[k_split[0]] = [k_split[1].strip(), v[0]]
-
-    ece_offered = get_quarter_offerings(dept, "FA19") + \
-                  get_quarter_offerings(dept, "WI20") + \
-                  get_quarter_offerings(dept, "SP20")
-
-    # remove the "ECE" tags and draw each department as a single node
-    # use weighted edges to show interchangeable prereqs
-    ece_courses = []
-    ece_prereqs = []
-    for course in ece:
-        k, v = course
-        # remove grad classes and courses not offered this year
-        if len(k) >= 3 and k[0] == '2' or k not in ece_offered:
-            continue
-        if v:
-            for i in v:
-                weight = len(i)
-                for j in i:
-                    if j.startswith(dept):
-                        # check if the course actually exists in catalog and still offered this year
-                        if j in ece_desc and j.split()[1] in ece_offered:
-                            ece_prereqs.append([j.split()[1], k, 1/weight])
-                    # if from another department, just draw as a single node
-                    else:
-                        pass
-                        #ece_prereqs.append([j.split()[0], k, 1/weight])
-        # if no prereqs, add as independent node
-        else:
-            ece_courses.append(k)
-
-    G = generate_graph(ece_courses, ece_prereqs)
-
 def get_courses_for_major(major):
     '''
     Returns a list of tuples of (course name, description, raw prereqs), and then saves the result to file
@@ -350,6 +309,13 @@ def get_quarter_helper(webpage):
 
 
 def get_clean_course_prereq(major):
+    '''
+    Convenience function that wraps clean_scrape and get_raw_course_list.
+    :param major:
+    :type major: str
+    :return: tuple
+    '''
+    assert isinstance(major, str)
     return scrapercleaner.clean_scrape(get_raw_course_list(major))
 
 """
@@ -432,6 +398,11 @@ def develop_plan(course_list, max_num, start_qtr):
     :param start_qtr: int
     :return: list
     '''
+    assert isinstance(course_list, list)
+    assert isinstance(max_num, int)
+    assert isinstance(start_qtr, int)
+    assert max_num > 0 and start_qtr > 0
+
     major_list = set()
     for course in course_list:
         major_list.add(re.search('[a-zA-Z]+', course).group())
@@ -505,6 +476,11 @@ def develop_plan_recursion(course_list, max_num, start_qtr):
     :param start_qtr: int
     :return: list
     '''
+    assert isinstance(course_list, list)
+    assert isinstance(max_num, int)
+    assert isinstance(start_qtr, int)
+    assert max_num > 0 and start_qtr > 0
+
     all_courses = set(course_list)
     last_courses = set()
 
@@ -526,6 +502,8 @@ def develop_plan_recursion_helper(course_list):
     :param course_list: list
     :return: list
     '''
+    assert isinstance(course_list, list)
+
     major_list = set()
     for course in course_list:
         major_list.add(re.search('[a-zA-Z]+', course).group())
@@ -548,6 +526,11 @@ def iterate_plan(course_list, max_num, start_qtr, num_iterations):
     :param num_iterations: int
     :return: list
     '''
+    assert isinstance(course_list, list)
+    assert isinstance(max_num, int)
+    assert isinstance(start_qtr, int)
+    assert max_num > 0 and start_qtr > 0 and num_iterations > 0
+
     return min([develop_plan(course_list, max_num, start_qtr) for i in range(num_iterations)], key=len)
 
 
@@ -562,6 +545,12 @@ def iterate_plan_recursions(course_list, max_num, start_qtr, num_iterations):
     :param num_iterations: int
     :return: list
     '''
+    assert isinstance(course_list, list)
+    assert isinstance(max_num, int)
+    assert isinstance(start_qtr, int)
+    assert isinstance(num_iterations, int)
+    assert max_num > 0 and start_qtr > 0 and num_iterations > 0
+
     return min([develop_plan_recursion(course_list, max_num, start_qtr) for i in range(num_iterations)], key=len)
 
 
@@ -597,26 +586,3 @@ beng_preset = ['BENG 1', 'BILD 1', 'CHEM 6A', 'CHEM 6B', 'MAE 8', 'MATH 20A', 'M
                'BENG 140B', 'BENG 172', 'BENG 186B', 'BENG 187A', 'BENG 191', 'MAE 170', 'BENG 122A', 'BENG 125', \
                'BENG 130', 'BENG 186A', 'BENG 187B', 'BENG 187C', 'BENG 187D', 'BENG 169A', 'BENG 169B', 'BENG 191', \
                'MAE 107', 'MAE 150', 'ECE 171', 'ECE 174']
-
-# print(len(ece_res))
-# cse_res = iterate_plan(cse_preset, 5, 1, 200)
-# print(cse_res)
-# # print(len(set(cse_preset)))
-# print(len(cse_res))
-# nano_res = iterate_plan(nano_preset, 5, 1, 200)
-# print(nano_res)
-# # print(len(set(nano_preset)))
-# print(len(nano_res))
-# se_res = iterate_plan(se_preset, 5, 1, 200)
-# print(se_res)
-# print(len(set(se_preset)))
-# print(len(se_res))
-# mae_res = iterate_plan(mae_preset, 5, 1, 200)
-# print(mae_res)
-# # print(len(set(mae_preset)))
-# print(len(mae_res))
-# beng_res = iterate_plan(beng_preset, 5, 1, 200)
-# print(beng_res)
-# # print(len(set(beng_preset)))
-# print(len(beng_res))
-
