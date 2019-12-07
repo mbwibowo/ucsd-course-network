@@ -37,6 +37,7 @@ Callable Functions:
 NOTE: all other functions are meant for behind the scenes processing, but if you wish to learn more, documentation is included within the functions.
 
 
+
 Scraper Cleaner Overview.
 
 Summary: Used to transform raw data from Strip Catalogue into useable information for graphing and planning. 
@@ -49,6 +50,7 @@ The prerequisite list consists of multiple sublists, which indicate interchangea
 In the example above, MATH 18 and MATH 31AH are interchangeable while the rest are required.'
 
 NOTE: clean_scrape(raw_course_list) takes as input the previously mentioned strip_cataloge.get_raw_course_list(major). 
+
 
 ### Graph generation
 From `clean_scrape()`, the data is used to generate a directed graph in NetworkX.
