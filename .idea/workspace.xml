@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="1afe4165-8e95-4e9e-aa49-da309048499c" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/strip_catalogue.py" beforeDir="false" afterPath="$PROJECT_DIR$/strip_catalogue.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -17,8 +16,8 @@
       <file leaf-file-name="strip_catalogue.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/strip_catalogue.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="498">
-              <caret line="619" column="30" lean-forward="true" selection-start-line="619" selection-start-column="30" selection-end-line="619" selection-end-column="30" />
+            <state relative-caret-position="226">
+              <caret line="352" column="66" selection-start-line="352" selection-start-column="66" selection-end-line="352" selection-end-column="66" />
               <folding>
                 <element signature="e#0#15#0" expanded="true" />
               </folding>
@@ -73,7 +72,7 @@
       <file leaf-file-name="scrapercleaner.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/scrapercleaner.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="714">
+            <state relative-caret-position="357">
               <caret line="42" column="11" selection-start-line="42" selection-start-column="6" selection-end-line="42" selection-end-column="11" />
             </state>
           </provider>
@@ -223,12 +222,12 @@
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="1" visible="true" weight="0.110416666" />
+      <window_info active="true" content_ui="combo" id="Project" order="1" visible="true" weight="0.110416666" />
       <window_info anchor="bottom" id="TODO" order="10" />
       <window_info anchor="bottom" id="Event Log" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Version Control" order="3" />
       <window_info anchor="bottom" id="Python Console" order="0" />
-      <window_info active="true" anchor="bottom" id="Run" order="6" visible="true" weight="0.32943678" />
+      <window_info anchor="bottom" id="Run" order="6" visible="true" weight="0.32943678" />
       <window_info id="Structure" order="2" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="1" />
       <window_info id="Favorites" order="0" side_tool="true" />
@@ -308,13 +307,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/scrapercleaner.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="714">
-          <caret line="42" column="11" selection-start-line="42" selection-start-column="6" selection-end-line="42" selection-end-column="11" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/raw_course_data/MAE.txt">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
@@ -384,10 +376,17 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/scrapercleaner.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="357">
+          <caret line="42" column="11" selection-start-line="42" selection-start-column="6" selection-end-line="42" selection-end-column="11" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/strip_catalogue.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="498">
-          <caret line="619" column="30" lean-forward="true" selection-start-line="619" selection-start-column="30" selection-end-line="619" selection-end-column="30" />
+        <state relative-caret-position="226">
+          <caret line="352" column="66" selection-start-line="352" selection-start-column="66" selection-end-line="352" selection-end-column="66" />
           <folding>
             <element signature="e#0#15#0" expanded="true" />
           </folding>
