@@ -27,7 +27,7 @@ Summary: Used for gaining raw information from UCSD websites. This information i
 Callable Functions: 
 1) get_raw_course_list(): Returns the raw list of tuples of (course name, description, prereq) in the specified department, then writes to file.
 2) get_quarter_list(): Returns a list of offered courses in the major in the given quarter and writes to file. NOTE: quarter is of the form WI20, FA19, SP20, etc.
-3) develop_plan: Returns the fastest route to completion of the course list over quarters taking max_num courses per quarter.
+3) develop_plan(): Returns the fastest route to completion of the course list over quarters taking max_num courses per quarter.
 4) develop_plan_recursion(): Recursively generates all of the prereqs for a given course list, then runs the course planner.
 5) develop_plan_recursion_helper(): Returns the prereq mapping for all majors given in course_list
 6) iterate_plan(): Takes the minimum length planner of num_interations executions of develop_plan
