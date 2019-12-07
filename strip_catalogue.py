@@ -348,6 +348,10 @@ def get_quarter_helper(webpage):
     # return unique numbers
     return list(set(course_list))
 
+
+def get_clean_course_prereq(major):
+    return scrapercleaner.clean_scrape(get_raw_course_list(major))
+
 """
 
 ======================================
@@ -358,8 +362,6 @@ ONLY CALL FUNCTIONS BELOW THIS COMMENT
 
 """
 
-def get_clean_course_prereq(major):
-    return scrapercleaner.clean_scrape(get_raw_course_list(major))
 
 def get_raw_course_list(major):
     '''
@@ -422,7 +424,14 @@ def get_quarter_list(major, quarter):
         return get_quarter_offerings(major, quarter)
 
 def develop_plan(course_list, max_num, start_qtr):
+    '''
+    Returns the fastest route to completion of the course list over quarters taking max_num courses per quarter.
 
+    :param course_list: list
+    :param max_num: int
+    :param start_qtr: int
+    :return: list
+    '''
     major_list = set()
     for course in course_list:
         major_list.add(re.search('[a-zA-Z]+', course).group())
@@ -433,10 +442,6 @@ def develop_plan(course_list, max_num, start_qtr):
     prereq_map = {}
     for major in major_list:
         fa_major_list = get_quarter_list(major, 'FA19')
-        # if major == 'ECE':
-        #     print(8)
-        #     print(fa_major_list)
-        #     print(9)
         fa_list.extend([major + ' ' + course for course in fa_major_list])
 
         wi_major_list = get_quarter_list(major, 'WI19')
@@ -469,12 +474,6 @@ def develop_plan(course_list, max_num, start_qtr):
     while len(needed_courses) != 0:
         offered_quarter_courses = [course for course in course_quarter_list[cur_quarter % 3] if course in needed_courses]
 
-        # eligible_courses = [t_course for t_course in offered_quarter_courses \
-        #                     if not set([sublist[random.randrange(len(sublist))] for sublist in prereq_map[t_course]]).intersection(needed_courses)]
-        # temp1_courses = [(t_course, prereq_map[t_course]) for t_course in offered_quarter_courses]
-        # temp1_courses = [(course_pair[0], prereq_map[t_course]) for course_pair in temp1_courses \
-        #                  if list(set(sublist).intersection(set(found_courses))) != []]
-
         eligible_courses = [t_course for t_course in offered_quarter_courses \
                             if not set([list(set(sublist).intersection(set(found_courses)))[random.randrange(len(set(sublist).intersection(set(found_courses))))]
                                         for sublist in prereq_map[t_course] if list(set(sublist).intersection(set(found_courses))) != []]).intersection(needed_courses)]
@@ -498,6 +497,14 @@ def develop_plan(course_list, max_num, start_qtr):
     return final_plan
 
 def develop_plan_recursion(course_list, max_num, start_qtr):
+    '''
+    Recursively generates all of the prereqs for a given course list, then runs the course planner.
+
+    :param course_list: list
+    :param max_num: int
+    :param start_qtr: int
+    :return: list
+    '''
     all_courses = set(course_list)
     last_courses = set()
 
@@ -510,16 +517,14 @@ def develop_plan_recursion(course_list, max_num, start_qtr):
                 all_courses.update(cur_prereq_map_simple[course])
         cur_prereq_map_simple = develop_plan_recursion_helper(all_courses)
 
-    # print(1)
-    # print(all_courses)
     return develop_plan(all_courses, max_num, start_qtr)
 
 def develop_plan_recursion_helper(course_list):
     '''
     Returns the prereq mapping for all majors given in course_list
 
-    :param course_list:
-    :return:
+    :param course_list: list
+    :return: list
     '''
     major_list = set()
     for course in course_list:
@@ -534,20 +539,38 @@ def develop_plan_recursion_helper(course_list):
             for course in prereq_map_init}
 
 def iterate_plan(course_list, max_num, start_qtr, num_iterations):
+    '''
+    Takes the minimum length planner of num_interations executions of develop_plan
+
+    :param course_list: list
+    :param max_num: int
+    :param start_qtr: int
+    :param num_iterations: int
+    :return: list
+    '''
     return min([develop_plan(course_list, max_num, start_qtr) for i in range(num_iterations)], key=len)
 
 
 def iterate_plan_recursions(course_list, max_num, start_qtr, num_iterations):
+    '''
+    Takes the minimum length planner of num_interations executions of develop_plan using a
+    recursively generated prereqs
+
+    :param course_list: list
+    :param max_num: int
+    :param start_qtr: int
+    :param num_iterations: int
+    :return: list
+    '''
     return min([develop_plan_recursion(course_list, max_num, start_qtr) for i in range(num_iterations)], key=len)
 
 
+'''
 
-# FIX 0 problem
-# print(get_raw_course_list('CHEM'))
-# print(develop_plan(['ECE 264A', 'ECE 35'], 3, 1))
-# print(get_clean_course_prereq('MATH'))
-# print(list([1, 2]))
-# NOTE EXCLUDE GE. MAY VARY SLIGHTLY BETWEEN SPECIALIZATIONS
+BELOW ARE PRESET TO TRY USING OUR FUNCTIONS
+
+'''
+
 ece_preset = ['MATH 10A', 'ECE 5', 'ECE 25', 'ECE 30', 'ECE 35', 'ECE 45', 'ECE 65', 'ECE 15', 'ECE 17', 'MATH 18', 'MATH 20A', \
               'MATH 20B', 'MATH 20C', 'MATH 20D', 'MATH 20E', 'CHEM 6A', 'PHYS 2A', 'PHYS 2B', 'PHYS 2C', 'ECE 100', \
               'ECE 101', 'ECE 107', 'ECE 109', 'ECE 171A', 'ECE 174', 'ECE 175A', 'ECE 171B', 'ECE 111', 'ECE 153', \
@@ -575,37 +598,6 @@ beng_preset = ['BENG 1', 'BILD 1', 'CHEM 6A', 'CHEM 6B', 'MAE 8', 'MATH 20A', 'M
                'BENG 130', 'BENG 186A', 'BENG 187B', 'BENG 187C', 'BENG 187D', 'BENG 169A', 'BENG 169B', 'BENG 191', \
                'MAE 107', 'MAE 150', 'ECE 171', 'ECE 174']
 
-
-# course_preset = ['ECE 101', 'ECE 45', 'ECE 35', 'MATH 18', 'MATH 20A', 'MATH 20B', 'PHYS 2A', 'MATH 10A']
-# print(iterate_plan(course_preset, 5, 1, 200))
-#
-#
-# ece_res = iterate_plan(ece_preset, 4, 1, 200)
-# ece_flat = [course for sublist in ece_res for course in sublist]
-#
-# prereq_map = {}
-# prereq_map.update({'ECE' + ' ' + val[0]: val[1] or [] for val in get_clean_course_prereq('ECE')})
-# prereq_map.update({'MATH' + ' ' + val[0]: val[1] or [] for val in get_clean_course_prereq('MATH')})
-# prereq_map.update({'PHYS' + ' ' + val[0]: val[1] or [] for val in get_clean_course_prereq('PHYS')})
-# prereq_map.update({'CHEM' + ' ' + val[0]: val[1] or [] for val in get_clean_course_prereq('CHEM')})
-#
-#
-# #print(prereq_map)
-#
-# ece_flat_prereqs_map = {course: [p_course for sublist in prereq_map[course] for p_course in sublist] for course in ece_flat}
-#
-# prev_classes = set()
-# plan_prereq = []
-# for sublist in ece_res:
-#     prev_classes.update(set(sublist))
-#     plan_prereq.extend([(course, list(set(ece_flat_prereqs_map[course]).intersection(prev_classes))) for course in sublist])
-#     # ece_flat_trim_prereqs = [(pair[0], set(pair[1]).intersection(set(ece_flat))) for pair in ece_flat_prereqs]
-#
-# print("=========")
-# print(ece_res)
-# print(len(ece_res))
-# print(plan_prereq)
-
 # print(len(ece_res))
 # cse_res = iterate_plan(cse_preset, 5, 1, 200)
 # print(cse_res)
@@ -617,7 +609,7 @@ beng_preset = ['BENG 1', 'BILD 1', 'CHEM 6A', 'CHEM 6B', 'MAE 8', 'MATH 20A', 'M
 # print(len(nano_res))
 # se_res = iterate_plan(se_preset, 5, 1, 200)
 # print(se_res)
-# # print(len(set(se_preset)))
+# print(len(set(se_preset)))
 # print(len(se_res))
 # mae_res = iterate_plan(mae_preset, 5, 1, 200)
 # print(mae_res)
@@ -627,9 +619,4 @@ beng_preset = ['BENG 1', 'BILD 1', 'CHEM 6A', 'CHEM 6B', 'MAE 8', 'MATH 20A', 'M
 # print(beng_res)
 # # print(len(set(beng_preset)))
 # print(len(beng_res))
-
-# print(iterate_plan_recursions(['MATH 140A'], 3, 1, 20))
-# print(iterate_plan_recursions(ece_preset, 3, 1, 20))
-# print(iterate_plan_recursions(cse_preset, 3, 1, 20))
-# print(min([[], [1, 2], [1]], key=len))
 
