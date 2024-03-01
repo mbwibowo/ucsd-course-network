@@ -1,6 +1,6 @@
 dash==1.1.1
 dash-core-components==1.1.1
-dash-html-components==1.0.0
+dash-html-components==2.0.0
 dash-renderer==1.0.0
 dash-table==4.1.0
 gunicorn==19.9.0
